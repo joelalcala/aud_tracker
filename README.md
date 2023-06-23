@@ -1,6 +1,9 @@
 # Aud Tracker
+Just a set of tracking scripts.
 
-The Aud Tracker is a JavaScript script designed to track various user information and store it in cookies. It allows you to track and retrieve information such as browser details, device information, page path, subdomain, referrer, URL parameters, IP address, first visit data, click path, and session count. This README provides an overview of the variables that can be tracked, their explanations, and examples of how to retrieve the information from the session or first visit.
+## What's included?
+- **aud_tracker.js**: Script that tracks various user information and store it in cookies. It allows you to track and retrieve information such as browser details, device information, page path, subdomain, referrer, URL parameters, IP address, first visit data, click path, and session count.
+- **update_ea_fields.js**: Script that updates updates hidden metadata fields in EveryAction forms. 
 
 ## Variables Tracked
 
