@@ -1,10 +1,6 @@
-(async function() {
-  // Audubon Tracker Module
+(function() {
   const audubonTracker = (() => {
-    // Specific URL parameters to track
     const specificUrlParams = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'ms', 'aud_cta', 'aud_path'];
-
-    // Property abbreviations for compact storage in cookies
     const propertyAbbreviations = {
       browser: 'br',
       device: 'dev',
@@ -22,7 +18,6 @@
     let sessionData = null;
     let firstVisitData = null;
 
-    // Create a cookie with the provided name, value, and expiration in days
     const createCookie = (name, value, days) => {
       const encodedValue = encodeURIComponent(value);
       const existingCookie = readCookie(name);
@@ -42,7 +37,6 @@
       }
     };
 
-    // Read the value of the cookie with the provided name
     const readCookie = (name) => {
       try {
         const nameEQ = name + "=";
@@ -59,7 +53,6 @@
       }
     };
 
-    // Extract specific URL parameters and their values
     const getParameters = (urlParams, paramList) => {
       return paramList.reduce((acc, param) => {
         if (urlParams.has(param)) {
@@ -70,7 +63,6 @@
       }, {});
     };
 
-    // Retrieve the user's IP address from an external API
     const getUserIP = async () => {
       try {
         const response = await fetch('https://api.ipify.org?format=json');
@@ -82,7 +74,6 @@
       }
     };
 
-    // Retrieve the browser information
     const getBrowserInfo = () => {
       const userAgent = navigator.userAgent;
       const screenResolution = `${window.screen.width}x${window.screen.height}`;
@@ -105,7 +96,6 @@
       return browser;
     };
 
-    // Get the URL parameters and initialize user info object
     const urlParams = new URLSearchParams(window && window.location ? window.location.search : '');
 
     let userInfo = {
@@ -125,15 +115,21 @@
       userInfo[propertyAbbreviations.clickPath] = urlParams.get('aud_path');
     }
 
-    // Track the user's session
     const track = async () => {
-      // Read session data from the session cookie
       if (!sessionData) {
         const sessionCookie = readCookie('aud_sv');
         sessionData = sessionCookie ? JSON.parse(sessionCookie) : null;
       }
 
-      // Create session data if it doesn't exist
+      if (!firstVisitData) {
+        const firstVisitCookie = readCookie('aud_fv');
+        firstVisitData = firstVisitCookie ? JSON.parse(firstVisitCookie) : null;
+      }
+
+      if (!sessionData || !firstVisitData) {
+        userInfo[propertyAbbreviations.ip] = await getUserIP();
+      }
+
       if (!sessionData) {
         sessionData = {
           ...userInfo,
@@ -141,46 +137,23 @@
         };
       }
 
-      // Read first visit data from the first visit cookie
       if (!firstVisitData) {
-        const firstVisitCookie = readCookie('aud_fv');
-        firstVisitData = firstVisitCookie ? JSON.parse(firstVisitCookie) : null;
-      }
-
-      // Create first visit data if it doesn't exist
-      if (!firstVisitData) {
-        userInfo[propertyAbbreviations.firstVisitDate] = new Date().toISOString();
         firstVisitData = {
           ...userInfo,
-          [propertyAbbreviations.sessionCount]: 0
+          [propertyAbbreviations.sessionCount]: 0,
+          [propertyAbbreviations.firstVisitDate]: new Date().toISOString()
         };
       }
 
-      // Increment session count
       firstVisitData[propertyAbbreviations.sessionCount]++;
       sessionData[propertyAbbreviations.sessionCount] = firstVisitData[propertyAbbreviations.sessionCount];
 
-      // Save session and first visit cookies
-      createCookie('aud_fv', JSON.stringify(firstVisitData), 365 * 10);
       createCookie('aud_sv', JSON.stringify(sessionData));
-
-      // Retrieve and save the user's IP address if it's not already present
-      if (!sessionData[propertyAbbreviations.ip]) {
-        const userIP = await getUserIP();
-        if (userIP) {
-          sessionData[propertyAbbreviations.ip] = userIP;
-          firstVisitData[propertyAbbreviations.ip] = userIP;
-          createCookie('aud_sv', JSON.stringify(sessionData));
-          createCookie('aud_fv', JSON.stringify(firstVisitData), 365 * 10);
-        }
-      }
+      createCookie('aud_fv', JSON.stringify(firstVisitData), 365 * 10);
     };
 
-    // Get the value of a session variable
     const getSession = (variable) => {
-      const unabbreviatedVariable = Object.keys(propertyAbbreviations).find(
-        key => propertyAbbreviations[key] === variable
-      ) || variable;
+      const unabbreviatedVariable = propertyAbbreviations[variable] || variable;
       if (sessionData && unabbreviatedVariable in sessionData) {
         return sessionData[unabbreviatedVariable];
       }
@@ -188,11 +161,8 @@
       return null;
     };
 
-    // Get the value of a first visit variable
     const getFirstVisit = (variable) => {
-      const unabbreviatedVariable = Object.keys(propertyAbbreviations).find(
-        key => propertyAbbreviations[key] === variable
-      ) || variable;
+      const unabbreviatedVariable = propertyAbbreviations[variable] || variable;
       if (firstVisitData && unabbreviatedVariable in firstVisitData) {
         return firstVisitData[unabbreviatedVariable];
       }
@@ -200,16 +170,18 @@
       return null;
     };
 
+    // Define the version of the tracking script
+    const version = '1.0.0';
+
     return {
       track,
       getSession,
-      getFirstVisit
+      getFirstVisit,
+      version
     };
   })();
 
-  // Expose the audubonTracker module to the global scope
   window.audubonTracker = audubonTracker;
 
-  // Track the session and retrieve/update cookies
-  await audubonTracker.track();
+  audubonTracker.track();
 })();
