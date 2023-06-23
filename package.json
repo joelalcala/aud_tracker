@@ -1,0 +1,19 @@
+{
+  "name": "aud_tracker",
+  "version": "1.0.0",
+  "description": "Just a set of tracking scripts.",
+  "main": "aud_tracker.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/joelalcala/aud_tracker.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/joelalcala/aud_tracker/issues"
+  },
+  "homepage": "https://github.com/joelalcala/aud_tracker#readme"
+}
