@@ -3,7 +3,8 @@ Just a set of tracking scripts.
 
 ## What's included?
 - **aud_tracker.js**: Script that tracks various user information and store it in cookies. It allows you to track and retrieve information such as browser details, device information, page path, subdomain, referrer, URL parameters, IP address, first visit data, click path, and session count.
-- **update_ea_fields.js**: Script that updates updates hidden metadata fields in EveryAction forms. 
+- **update_ea_fields.js**: Script that updates updates hidden metadata fields in EveryAction forms.
+- **link_decorator.js**: Script that adds the `aud_path` url parameter to any link going to act.audubon.org.
 
 ## Variables Tracked
 
@@ -99,19 +100,6 @@ const ipFromSession = audubonTracker.getSession('ip');
 const ipFromFirstVisit = audubonTracker.getFirstVisit('ip');
 ```
 
-### CTA (Call to Action)
-
-The `cta` variable stores the value of the `aud_cta` URL parameter when the subdomain is "act".
-
-**Code for Retrieval:**
-```javascript
-// Retrieve CTA from the session data
-const ctaFromSession = audubonTracker.getSession('cta');
-
-// Retrieve CTA from the first visit data
-const ctaFromFirstVisit = audubonTracker.getFirstVisit('cta');
-```
-
 ### First Visit Date
 
 The `firstVisitDate` variable stores the date and time of the first visit to the website.
@@ -123,6 +111,19 @@ const ipFromSession = audubonTracker.getSession('ip');
 
 // Retrieve IP address from the first visit data
 const ipFromFirstVisit = audubonTracker.getFirstVisit('ip');
+```
+
+### CTA (Call to Action)
+
+The `cta` variable stores the value of the `aud_cta` URL parameter when the subdomain is "act".
+
+**Code for Retrieval:**
+```javascript
+// Retrieve CTA from the session data
+const ctaFromSession = audubonTracker.getSession('cta');
+
+// Retrieve CTA from the first visit data
+const ctaFromFirstVisit = audubonTracker.getFirstVisit('cta');
 ```
 
 ### Click Path
