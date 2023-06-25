@@ -81,11 +81,14 @@ const audubonTracker = (function() {
       return this.cookies[cookieName] || null;
     },
 
-    setCookieValue(cookieName, value, expirationDate = "") {
+    setCookieValue(cookieName, value, expirationDate = "", domain = "") {
       const cookieValue = encodeURIComponent(JSON.stringify(value));
       let cookieString = `${cookieName}=${cookieValue};path=/`;
       if (expirationDate) {
         cookieString += `;expires=${expirationDate}`;
+      }
+      if (domain) {
+        cookieString += `;domain=${domain}`;
       }
       document.cookie = cookieString;
     },
@@ -130,7 +133,7 @@ const audubonTracker = (function() {
       const updatedData = { ...this.sessionData, ...data };
       this.sessionData = updatedData;
       const abbreviatedData = this.getAbbreviatedData(updatedData);
-      this.setCookieValue("aud_sv", abbreviatedData);
+      this.setCookieValue("aud_sv", abbreviatedData, "", ".audubon.org");
     },
 
     getFirstVisitData() {
@@ -143,7 +146,7 @@ const audubonTracker = (function() {
       const updatedData = { ...this.firstVisitData, ...data };
       this.firstVisitData = updatedData;
       const abbreviatedData = this.getAbbreviatedData(updatedData);
-      this.setCookieValue("aud_fv", abbreviatedData, "Thu, 31 Dec 9999 23:59:59 GMT");
+      this.setCookieValue("aud_fv", abbreviatedData, "Thu, 31 Dec 9999 23:59:59 GMT", ".audubon.org");
     },
   };
 
