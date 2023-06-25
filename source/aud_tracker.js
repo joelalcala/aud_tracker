@@ -39,6 +39,7 @@ const audubonTracker = (function() {
       clickPath: "cp",
       ipAddress: "ip",
       firstVisitDate: "fv",
+      referrer: "rf",
     },
   };
 
@@ -267,6 +268,16 @@ const audubonTracker = (function() {
       }
     },
 
+    referrer: function() {
+      if (dataStore.sessionData.referrer) {
+        return dataStore.sessionData.referrer;
+      }
+
+      const referrer = document.referrer || null;
+      dataStore.setSessionData({ referrer });
+      return referrer;
+    },
+
     firstVisitDate: function() {
       const firstVisitData = dataStore.getFirstVisitData();
       const firstVisitDate = firstVisitData.firstVisitDate;
@@ -296,6 +307,7 @@ const audubonTracker = (function() {
       cta: dataFetchers.cta(),
       clickPath: dataFetchers.clickPath(),
       ipAddress: dataFetchers.ipAddress(),
+      referrer: dataFetchers.referrer(),
       firstVisitDate: dataFetchers.firstVisitDate(),
     };
 
