@@ -28,6 +28,6 @@ window.nvtag_callbacks.alterPost.push(function (args) {
   args.data.oa_first_subdomain = audubonTracker.getFirstVisit('subdomain') ? audubonTracker.getFirstVisit('subdomain') : '';
   args.data.oa_last_referrer = audubonTracker.getSession('referrer') ? audubonTracker.getSession('referrer') : '';
   args.data.oa_first_referrer = audubonTracker.getFirstVisit('referrer') ? audubonTracker.getFirstVisit('referrer') : '';
-  args.data.oa_last_cta = audubonTracker.getSession('cta') ? audubonTracker.getSession('cta') : '';
-  args.data.oa_first_cta = audubonTracker.getSession('clickPath') ? audubonTracker.getSession('clickPath') : '';
+  args.data.oa_cta = audubonTracker.getSession('cta') ? audubonTracker.getSession('cta') : '';
+  args.data.oa_click_path = audubonTracker.getSession('clickPath') ? audubonTracker.getSession('clickPath') : '';
 });
