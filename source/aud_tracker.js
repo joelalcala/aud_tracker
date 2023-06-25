@@ -1,5 +1,7 @@
 const audubonTracker = (function() {
   const ipifyUrl = "https://api.ipify.org?format=json";
+  const sessionCookieName = "aud_sv";
+  const firstVisitCookieName = "aud_fv";
 
   const abbreviations = {
     browser: {
@@ -48,8 +50,8 @@ const audubonTracker = (function() {
   const dataStore = {
     initialized: false,
     cookies: null,
-    sessionData: {},
-    firstVisitData: {},
+    sessionData: null,
+    firstVisitData: null,
 
     initialize() {
       if (this.initialized) {
@@ -57,8 +59,8 @@ const audubonTracker = (function() {
       }
 
       this.cookies = this.getCookies();
-      this.sessionData = this.cookies["aud_sv"] || {};
-      this.firstVisitData = this.cookies["aud_fv"] || {};
+      this.sessionData = this.cookies[sessionCookieName] || {};
+      this.firstVisitData = this.cookies[firstVisitCookieName] || {};
       this.initialized = true;
     },
 
@@ -133,7 +135,7 @@ const audubonTracker = (function() {
       const updatedData = { ...this.sessionData, ...data };
       this.sessionData = updatedData;
       const abbreviatedData = this.getAbbreviatedData(updatedData);
-      this.setCookieValue("aud_sv", abbreviatedData, "", ".audubon.org");
+      this.setCookieValue(sessionCookieName, abbreviatedData);
     },
 
     getFirstVisitData() {
@@ -146,7 +148,7 @@ const audubonTracker = (function() {
       const updatedData = { ...this.firstVisitData, ...data };
       this.firstVisitData = updatedData;
       const abbreviatedData = this.getAbbreviatedData(updatedData);
-      this.setCookieValue("aud_fv", abbreviatedData, "Thu, 31 Dec 9999 23:59:59 GMT", ".audubon.org");
+      this.setCookieValue(firstVisitCookieName, abbreviatedData, "Thu, 31 Dec 9999 23:59:59 GMT", ".audubon.org");
     },
   };
 
@@ -313,6 +315,10 @@ const audubonTracker = (function() {
       referrer: dataFetchers.referrer(),
       firstVisitDate: dataFetchers.firstVisitDate(),
     };
+
+    if (!dataStore.getSessionData()) {
+      dataStore.setSessionData(sessionData);
+    }
 
     const abbreviatedSessionData = dataStore.getAbbreviatedData(sessionData);
     dataStore.setSessionData(abbreviatedSessionData);
