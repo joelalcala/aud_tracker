@@ -1,4 +1,4 @@
-(function() {
+const audubonTracker = (function() {
   const ipifyUrl = "https://api.ipify.org?format=json";
 
   const abbreviations = {
@@ -307,23 +307,29 @@
     }
   };
 
-  window.getSession = function(varName) {
-    const sessionData = dataStore.getSessionData();
-    const cookieData = sessionData[varName] || null;
-    if (!cookieData) {
-      console.error("Requested variable not found in session data");
-    }
-    return cookieData;
-  };
+  return {
+    getSession: function(varName) {
+      const sessionData = dataStore.getSessionData();
+      const cookieData = sessionData[varName] || null;
+      if (!cookieData) {
+        console.error("Requested variable not found in session data");
+      }
+      return cookieData;
+    },
 
-  window.getFirstVisit = function(varName) {
-    const firstVisitData = dataStore.getFirstVisitData();
-    const cookieData = firstVisitData[varName] || null;
-    if (!cookieData) {
-      console.error("Requested variable not found in first visit data");
-    }
-    return cookieData;
-  };
+    getFirstVisit: function(varName) {
+      const firstVisitData = dataStore.getFirstVisitData();
+      const cookieData = firstVisitData[varName] || null;
+      if (!cookieData) {
+        console.error("Requested variable not found in first visit data");
+      }
+      return cookieData;
+    },
 
-  track();
+    track: function() {
+      track();
+    },
+  };
 })();
+
+audubonTracker.track();
