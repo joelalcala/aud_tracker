@@ -113,21 +113,21 @@ const audubonTracker = (function() {
       const abbreviatedData = {};
       for (const key in data) {
         if (data.hasOwnProperty(key) && data[key] !== null) {
-          const abbreviatedKey = abbreviations.keys[key] || key;
-
+          const abbreviation = abbreviations.keys[key] || key;
+    
           if (key === "urlParams") {
             const urlParams = data[key];
-            const abbreviatedUrlParams = {};
-
+            const unabbreviatedUrlParams = {};
+    
             for (const paramKey in urlParams) {
-              const value = urlParams[paramKey];
-              const abbreviation = abbreviations.urlParams[paramKey] || paramKey;
-              abbreviatedUrlParams[abbreviation] = this.getAbbreviatedValue(value);
+              if (abbreviations.urlParams[paramKey]) {
+                unabbreviatedUrlParams[paramKey] = urlParams[paramKey];
+              }
             }
-
-            abbreviatedData[abbreviatedKey] = abbreviatedUrlParams;
+    
+            abbreviatedData[abbreviation] = unabbreviatedUrlParams;
           } else {
-            abbreviatedData[abbreviatedKey] = this.getAbbreviatedValue(data[key]);
+            abbreviatedData[abbreviation] = data[key];
           }
         }
       }
@@ -317,14 +317,17 @@ const audubonTracker = (function() {
   const getSession = function(variableName) {
     dataStore.initialize();
     const sessionData = dataStore.sessionData;
-    return sessionData[variableName] || null;
+    const abbreviatedKey = abbreviations.keys[variableName] || variableName;
+    return sessionData[variableName] || sessionData[abbreviatedKey] || null;
   };
-
+  
   const getFirstVisit = function(variableName) {
     dataStore.initialize();
     const firstVisitData = dataStore.firstVisitData;
-    return firstVisitData[variableName] || null;
+    const abbreviatedKey = abbreviations.keys[variableName] || variableName;
+    return firstVisitData[variableName] || firstVisitData[abbreviatedKey] || null;
   };
+  
 
   return {
     getSession,
