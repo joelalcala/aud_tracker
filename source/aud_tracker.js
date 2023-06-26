@@ -2,46 +2,46 @@ const audubonTracker = (function() {
   const ipifyUrl = "https://api.ipify.org?format=json";
   const sessionCookieName = "aud_sv";
   const firstVisitCookieName = "aud_fv";
+  const domain = ".audubon.org";
 
   const abbreviations = {
+    keys: {
+      pagePath: "pp",
+      subdomain: "sd",
+      sessionCount: "sc",
+      ipAddress: "ip",
+      referrer: "ref",
+      firstVisitDate: "fvd",
+      cta: "cta",
+      clickPath: "cp",
+    },
+    urlParams: {
+      utm_source: "src",
+      utm_medium: "med",
+      utm_campaign: "cmp",
+      utm_content: "cnt",
+      utm_term: "trm",
+      ms: "ms",
+      aud_cta: "cta",
+      aud_path: "path",
+    },
     browser: {
       Chrome: "Ch",
-      Firefox: "Ff",
-      Safari: "Sf",
+      Firefox: "FF",
+      Safari: "SF",
       Edge: "Ed",
       Opera: "Op",
       IE: "IE",
     },
-    medium: {
+    sources: {
+      Google: "G",
+      Facebook: "Fb",
+      Twitter: "Tw",
+      LinkedIn: "Li",
+    },
+    mediums: {
       email: "em",
       social: "so",
-    },
-    source: {
-      facebook: "Fb",
-      twitter: "Tw",
-      instagram: "Ig",
-      linkedin: "Ln",
-      youtube: "Yt",
-    },
-    urlParams: {
-      utm_source: "us",
-      utm_medium: "um",
-      utm_campaign: "uc",
-      utm_content: "uct",
-      utm_term: "ut",
-      ms: "ms",
-    },
-    keys: {
-      browser: "br",
-      pagePath: "pp",
-      subdomain: "sd",
-      sessionCount: "sc",
-      urlParams: "up",
-      cta: "ca",
-      clickPath: "cp",
-      ipAddress: "ip",
-      firstVisitDate: "fv",
-      referrer: "rf",
     },
   };
 
@@ -50,8 +50,8 @@ const audubonTracker = (function() {
   const dataStore = {
     initialized: false,
     cookies: null,
-    sessionData: null,
-    firstVisitData: null,
+    sessionData: {},
+    firstVisitData: {},
 
     initialize() {
       if (this.initialized) {
@@ -95,15 +95,24 @@ const audubonTracker = (function() {
       document.cookie = cookieString;
     },
 
-    getAbbreviatedValue(key, value) {
-      const abbreviationMap = abbreviations[key] || {};
-      return abbreviationMap[value] || value;
+    setSessionData(data) {
+      this.initialize();
+      this.sessionData = { ...this.sessionData, ...data };
+      const abbreviatedData = this.getAbbreviatedData(this.sessionData);
+      this.setCookieValue(sessionCookieName, abbreviatedData, "", domain);
+    },
+
+    setFirstVisitData(data) {
+      this.initialize();
+      this.firstVisitData = { ...this.firstVisitData, ...data };
+      const abbreviatedData = this.getAbbreviatedData(this.firstVisitData);
+      this.setCookieValue(firstVisitCookieName, abbreviatedData, "Thu, 31 Dec 9999 23:59:59 GMT", domain);
     },
 
     getAbbreviatedData(data) {
       const abbreviatedData = {};
       for (const key in data) {
-        if (data[key] !== null) {
+        if (data.hasOwnProperty(key) && data[key] !== null) {
           const abbreviatedKey = abbreviations.keys[key] || key;
 
           if (key === "urlParams") {
@@ -113,42 +122,26 @@ const audubonTracker = (function() {
             for (const paramKey in urlParams) {
               const value = urlParams[paramKey];
               const abbreviation = abbreviations.urlParams[paramKey] || paramKey;
-              abbreviatedUrlParams[abbreviation] = this.getAbbreviatedValue("source", value);
+              abbreviatedUrlParams[abbreviation] = this.getAbbreviatedValue(value);
             }
 
             abbreviatedData[abbreviatedKey] = abbreviatedUrlParams;
           } else {
-            abbreviatedData[abbreviatedKey] = this.getAbbreviatedValue(key, data[key]);
+            abbreviatedData[abbreviatedKey] = this.getAbbreviatedValue(data[key]);
           }
         }
       }
       return abbreviatedData;
     },
 
-    getSessionData() {
-      this.initialize();
-      return this.sessionData;
-    },
-
-    setSessionData(data) {
-      this.initialize();
-      const updatedData = { ...this.sessionData, ...data };
-      this.sessionData = updatedData;
-      const abbreviatedData = this.getAbbreviatedData(updatedData);
-      this.setCookieValue(sessionCookieName, abbreviatedData);
-    },
-
-    getFirstVisitData() {
-      this.initialize();
-      return this.firstVisitData;
-    },
-
-    setFirstVisitData(data) {
-      this.initialize();
-      const updatedData = { ...this.firstVisitData, ...data };
-      this.firstVisitData = updatedData;
-      const abbreviatedData = this.getAbbreviatedData(updatedData);
-      this.setCookieValue(firstVisitCookieName, abbreviatedData, "Thu, 31 Dec 9999 23:59:59 GMT", ".audubon.org");
+    getAbbreviatedValue(value) {
+      for (const map of Object.values(abbreviations)) {
+        const abbreviation = Object.keys(map).find(key => map[key] === value);
+        if (abbreviation) {
+          return abbreviation;
+        }
+      }
+      return value;
     },
   };
 
@@ -171,8 +164,7 @@ const audubonTracker = (function() {
       for (const { name, pattern } of browserPatterns) {
         const match = pattern.exec(userAgent);
         if (match) {
-          dataStore.setSessionData({ browser: name });
-          return name;
+          return abbreviations.browser[name];
         }
       }
 
@@ -185,7 +177,6 @@ const audubonTracker = (function() {
       }
 
       const pagePath = window.location.pathname;
-      dataStore.setSessionData({ pagePath });
       return pagePath;
     },
 
@@ -195,17 +186,16 @@ const audubonTracker = (function() {
       }
 
       const subdomain = window.location.hostname.split(".")[0];
-      dataStore.setSessionData({ subdomain });
       return subdomain;
     },
 
     sessionCount: function() {
-      if (dataStore.sessionData.sessionCount) {
-        return dataStore.sessionData.sessionCount;
+      const sessionData = dataStore.getSessionData;
+      if (sessionData.sessionCount) {
+        return sessionData.sessionCount;
       }
 
-      const sessionCount = (dataStore.sessionData.sessionCount || 0) + 1;
-      dataStore.setSessionData({ sessionCount });
+      const sessionCount = (sessionData.sessionCount || 0) + 1;
       return sessionCount;
     },
 
@@ -222,43 +212,30 @@ const audubonTracker = (function() {
           params[key] = value;
         }
       });
-
-      if (Object.keys(params).length > 0) {
-        dataStore.setSessionData({ urlParams: params });
-      }
-
       return params;
     },
 
     cta: function() {
-      if (dataStore.sessionData.cta !== undefined) {
-        return dataStore.sessionData.cta;
+      const subdomain = this.subdomain();
+      const urlParams = this.urlParams();
+      if (subdomain === "act" && urlParams.aud_cta) {
+        return urlParams.aud_cta;
       }
-
-      const urlParams = new URLSearchParams(window.location.search);
-      const subdomain = window.location.hostname.split(".")[0];
-      const ctaValue = (subdomain === "act" && urlParams.get("aud_cta")) || null;
-      dataStore.setSessionData({ cta: ctaValue });
-      return ctaValue;
+      return null;
     },
 
     clickPath: function() {
-      if (dataStore.sessionData.clickPath !== undefined) {
-        return dataStore.sessionData.clickPath;
+      const subdomain = this.subdomain();
+      const urlParams = this.urlParams();
+      if (subdomain === "act" && urlParams.aud_path) {
+        return urlParams.aud_path;
       }
-
-      const urlParams = new URLSearchParams(window.location.search);
-      const subdomain = window.location.hostname.split(".")[0];
-      const clickPathValue = (subdomain === "act" && urlParams.get("aud_path")) || null;
-      dataStore.setSessionData({ clickPath: clickPathValue });
-      return clickPathValue;
+      return null;
     },
 
     ipAddress: async function() {
-      const sessionData = dataStore.getSessionData();
-      const storedIPAddress = sessionData.ipAddress;
-      if (storedIPAddress) {
-        return storedIPAddress;
+      if (dataStore.sessionData.ipAddress) {
+        return dataStore.sessionData.ipAddress;
       }
 
       try {
@@ -268,88 +245,82 @@ const audubonTracker = (function() {
         dataStore.setSessionData({ ipAddress });
         return ipAddress;
       } catch (error) {
-        console.error("Failed to fetch IP address:", error);
+        console.error("Error fetching IP address:", error);
         return null;
       }
     },
 
     referrer: function() {
-      if (dataStore.sessionData.referrer) {
-        return dataStore.sessionData.referrer;
+      if (document.referrer) {
+        return document.referrer;
       }
-
-      const referrer = document.referrer || null;
-      dataStore.setSessionData({ referrer });
-      return referrer;
+      return null;
     },
 
     firstVisitDate: function() {
-      const firstVisitData = dataStore.getFirstVisitData();
-      const firstVisitDate = firstVisitData.firstVisitDate;
-      if (!firstVisitDate) {
-        const now = new Date();
-        const formattedDate = now
-          .toLocaleDateString("en-US", {
-            year: "2-digit",
-            month: "2-digit",
-            day: "2-digit",
-          })
-          .replace(/\//g, "");
-        dataStore.setFirstVisitData({ firstVisitDate: formattedDate });
-        return formattedDate;
+      if (dataStore.sessionData.firstVisitDate) {
+        return dataStore.sessionData.firstVisitDate;
       }
+
+      const now = new Date();
+      const firstVisitDate = `${String(now.getFullYear()).slice(-2)}${String(now.getMonth() + 1).padStart(2, "0")}${String(
+        now.getDate()
+      ).padStart(2, "0")}`;
       return firstVisitDate;
     },
   };
 
-  const track = function() {
-    const sessionData = {
-      sessionCount: dataFetchers.sessionCount(),
-      browser: dataFetchers.browser(),
-      pagePath: dataFetchers.pagePath(),
-      subdomain: dataFetchers.subdomain(),
-      urlParams: dataFetchers.urlParams(),
-      cta: dataFetchers.cta(),
-      clickPath: dataFetchers.clickPath(),
-      ipAddress: dataFetchers.ipAddress(),
-      referrer: dataFetchers.referrer(),
-      firstVisitDate: dataFetchers.firstVisitDate(),
-    };
+  const track = async function() {
+    const hasSessionData = Object.keys(dataStore.getSessionData).length > 0;
+    const hasFirstVisitData = Object.keys(dataStore.getFirstVisitData()).length > 0;
 
-    if (!dataStore.getSessionData()) {
+    if (!hasSessionData) {
+      const sessionData = {
+        sessionCount: dataFetchers.sessionCount(),
+        browser: dataFetchers.browser(),
+        pagePath: dataFetchers.pagePath(),
+        subdomain: dataFetchers.subdomain(),
+        urlParams: dataFetchers.urlParams(),
+        ipAddress: await dataFetchers.ipAddress(),
+        referrer: dataFetchers.referrer(),
+        firstVisitDate: dataFetchers.firstVisitDate(),
+      };
+
+      if (!hasFirstVisitData) {
+        dataStore.setFirstVisitData(sessionData);
+      }
+
       dataStore.setSessionData(sessionData);
     }
 
-    const abbreviatedSessionData = dataStore.getAbbreviatedData(sessionData);
-    dataStore.setSessionData(abbreviatedSessionData);
-
-    if (!dataStore.getFirstVisitData().sessionCount) {
-      dataStore.setFirstVisitData(abbreviatedSessionData);
+    const cta = dataFetchers.cta();
+    const clickPath = dataFetchers.clickPath();
+    const abbreviatedData = {};
+    if (cta) {
+      abbreviatedData[abbreviations.keys.cta] = cta;
+    }
+    if (clickPath) {
+      abbreviatedData[abbreviations.keys.clickPath] = clickPath;
+    }
+    if (Object.keys(abbreviatedData).length > 0) {
+      dataStore.setSessionData(abbreviatedData);
     }
   };
 
+  const getSession = function(variableName) {
+    const sessionData = dataStore.sessionData;
+    return sessionData[variableName] || null;
+  };
+  
+  const getFirstVisit = function(variableName) {
+    const firstVisitData = dataStore.firstVisitData;
+    return firstVisitData[variableName] || null;
+  };  
+
   return {
-    getSession: function(varName) {
-      const sessionData = dataStore.getSessionData();
-      const cookieData = sessionData[varName] || null;
-      if (!cookieData) {
-        console.error("Requested variable not found in session data");
-      }
-      return cookieData;
-    },
-
-    getFirstVisit: function(varName) {
-      const firstVisitData = dataStore.getFirstVisitData();
-      const cookieData = firstVisitData[varName] || null;
-      if (!cookieData) {
-        console.error("Requested variable not found in first visit data");
-      }
-      return cookieData;
-    },
-
-    track: function() {
-      track();
-    },
+    getSession,
+    getFirstVisit,
+    track,
   };
 })();
 
