@@ -269,10 +269,11 @@ const audubonTracker = (function() {
     },
   };
 
+
   const track = async function() {
     const hasSessionData = Object.keys(dataStore.sessionData).length > 0;
     const hasFirstVisitData = Object.keys(dataStore.firstVisitData).length > 0;
-
+  
     if (!hasSessionData) {
       const sessionData = {
         sessionCount: dataFetchers.sessionCount(),
@@ -283,14 +284,14 @@ const audubonTracker = (function() {
         referrer: dataFetchers.referrer(),
         firstVisitDate: dataFetchers.firstVisitDate(),
       };
-
+  
       if (!hasFirstVisitData) {
         dataStore.setFirstVisitData(sessionData);
       }
-
+  
       dataStore.setSessionData(sessionData);
     }
-
+  
     const cta = dataFetchers.cta();
     const clickPath = dataFetchers.clickPath();
     const abbreviatedData = {};
@@ -303,23 +304,35 @@ const audubonTracker = (function() {
     if (Object.keys(abbreviatedData).length > 0) {
       dataStore.setSessionData(abbreviatedData);
     }
+  
+    if (!hasSessionData || !hasFirstVisitData) {
+      const ipAddress = await dataFetchers.ipAddress();
+      if (ipAddress) {
+        dataStore.setSessionData({ ipAddress });
+        if (!hasFirstVisitData) {
+          dataStore.setFirstVisitData({ ipAddress });
+        }
+      }
+    }
   };
-
+  
   const getSession = function(variableName) {
     const sessionData = dataStore.sessionData;
     return sessionData[variableName] || null;
   };
-
+  
   const getFirstVisit = function(variableName) {
     const firstVisitData = dataStore.firstVisitData;
     return firstVisitData[variableName] || null;
   };
-
+  
   return {
     getSession,
     getFirstVisit,
     track,
   };
+  
+
 })();
 
 audubonTracker.track();
