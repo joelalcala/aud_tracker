@@ -1,126 +1,125 @@
 const puppeteer = require('puppeteer');
+const path = require('path');
 const fs = require('fs');
+const aud_tracker = fs.readFileSync(path.resolve(__dirname, '../src/aud_tracker.js'), 'utf8');
 
-describe('Audubon Tracker Test', () => {
-  let browser;
-  let page;
+describe('Audubon Tracker', () => {
+  let browser, page;
+  const todayDate = `${new Date().getFullYear().toString().substr(-2)}${String(new Date().getMonth() + 1).padStart(2, "0")}${String(new Date().getDate()).padStart(2, "0")}`;
 
   beforeAll(async () => {
     browser = await puppeteer.launch();
     page = await browser.newPage();
-
-    // Load the page
-    await page.goto('https://www.audubon.org/field-guide/bird/magnificent-frigatebird?ms=digital-eng-social-facebook-x-20230600-nas_eng&utm_source=facebook&utm_medium=social&utm_campaign=20230600_nas_eng');
   });
 
-  afterAll(async () => {
-    // Close the browser after all tests are completed
-    await browser.close();
+  afterAll(() => {
+    browser.close();
   });
 
-  it('should track and store session data correctly', async () => {
-    // Load the tracking script from the project folder
-    const trackingScript = fs.readFileSync('./src/aud_tracker.js', 'utf8');
-    await page.evaluate(trackingScript);
-
-    // Track the data
-    await page.evaluate(() => {
-      audubonTracker.track();
+  describe('NAS page', () => {
+    beforeAll(async () => {
+      await page.goto('https://www.audubon.org/field-guide/bird/magnificent-frigatebird?ms=digital-eng-social-facebook-x-20230600-nas_eng&utm_source=facebook&utm_medium=social&utm_campaign=20230600_nas_eng');
+      await page.evaluate(aud_tracker);
+      await page.evaluate('audubonTracker.track()');
     });
 
-    // Wait for the tracking script to execute
-    await page.waitForTimeout(2000);
-
-    // Test whether the session data cookie has been created
-    const sessionCookie = await page.cookies('https://www.audubon.org');
-    expect(sessionCookie.find(cookie => cookie.name === 'aud_sv')).toBeTruthy();
-
-    // Test the getter functions for session data
-    const pagePath = await page.evaluate(() => {
-      return audubonTracker.getSession('pagePath');
-    });
-    expect(pagePath).toBe('/field-guide/bird/magnificent-frigatebird');
-
-    const subdomain = await page.evaluate(() => {
-      return audubonTracker.getSession('subdomain');
-    });
-    expect(subdomain).toBe('www');
-
-    const sessionCount = await page.evaluate(() => {
-      return audubonTracker.getSession('sessionCount');
-    });
-    expect(sessionCount).toBe(1);
-
-    const urlParams = await page.evaluate(() => {
-      return audubonTracker.getSession('urlParams');
-    });
-    expect(urlParams).toEqual({
-      ms: 'digital-eng-social-facebook-x-20230600-nas_eng',
-      utm_source: 'facebook',
-      utm_medium: 'social',
-      utm_campaign: '20230600_nas_eng'
+    test('Cookies are created', async () => {
+      const aud_sv = await page.cookies().then(cookies => cookies.find(cookie => cookie.name === 'aud_sv'));
+      const aud_fv = await page.cookies().then(cookies => cookies.find(cookie => cookie.name === 'aud_fv'));
+      expect(aud_sv).toBeTruthy();
+      expect(aud_fv).toBeTruthy();
     });
 
-    const firstVisitDate = await page.evaluate(() => {
-      return audubonTracker.getFirstVisit('firstVisitDate');
+    test('pagePath is correct', async () => {
+      const pagePath = await page.evaluate('audubonTracker.getSession("pagePath")');
+      expect(pagePath).toBe('/field-guide/bird/magnificent-frigatebird');
     });
-    const now = new Date();
-    const formattedDate = `${String(now.getFullYear()).slice(-2)}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
-    expect(firstVisitDate).toBe(formattedDate);
 
-    const ipAddress = await page.evaluate(() => {
-      return audubonTracker.getSession('ipAddress');
+    test('subdomain is correct', async () => {
+      const subdomain = await page.evaluate('audubonTracker.getSession("subdomain")');
+      expect(subdomain).toBe('www');
     });
-    expect(ipAddress).toBeTruthy();
+
+    test('sessionCount is correct', async () => {
+      const sessionCount = await page.evaluate('audubonTracker.getSession("sessionCount")');
+      expect(sessionCount).toBe(1);
+    });
+
+    test('urlParams are correct', async () => {
+      const urlParams = await page.evaluate('audubonTracker.getSession("urlParams")');
+      expect(urlParams).toEqual(expect.objectContaining({
+        ms: 'digital-eng-social-facebook-x-20230600-nas_eng',
+        utm_source: 'facebook',
+        utm_medium: 'social',
+        utm_campaign: '20230600_nas_eng'
+      }));
+    });
+
+    test('firstVisitDate is correct', async () => {
+      const firstVisitDate = await page.evaluate('audubonTracker.getFirstVisit("firstVisitDate")');
+      expect(firstVisitDate).toBe(todayDate);
+    });
+
+    test('ipAddress is available', async () => {
+      const ipAddress = await page.evaluate('audubonTracker.getSession("ipAddress")');
+      expect(ipAddress).toBeTruthy();
+    });
   });
 
-  it('should still have session data after navigating to a different domain', async () => {
-    // Navigate to another page
-    await page.goto('https://act.audubon.org/a/donate?ms=digital-fund-web-website_nas-topmenu_donate_20200800&aud_path=/field-guide/bird/magnificent-frigatebird&aud_cta=nav');
-
-    // Test whether the session data cookie is still available after switching domains
-    const sessionCookieAfterNav = await page.cookies('https://www.audubon.org');
-    expect(sessionCookieAfterNav.find(cookie => cookie.name === 'aud_sv')).toBeTruthy();
-
-    // Test the getter functions for session data after navigating to a different domain
-    const pagePathAfterNav = await page.evaluate(() => {
-      return audubonTracker.getSession('pagePath');
-    });
-    expect(pagePathAfterNav).toBe('/field-guide/bird/magnificent-frigatebird');
-
-    const subdomainAfterNav = await page.evaluate(() => {
-      return audubonTracker.getSession('subdomain');
-    });
-    expect(subdomainAfterNav).toBe('www');
-
-    const sessionCountAfterNav = await page.evaluate(() => {
-      return audubonTracker.getSession('sessionCount');
-    });
-    expect(sessionCountAfterNav).toBe(1);
-  });
-
-  it('should track and store cta and clickpath correctly on subsequent page view', async () => {
-    // Load the tracking script again
-    const trackingScript = fs.readFileSync('./src/aud_tracker.js', 'utf8');
-    await page.evaluate(trackingScript);
-
-    // Track the data again
-    await page.evaluate(() => {
-      audubonTracker.track();
+  describe('EA page', () => {
+    beforeAll(async () => {
+      await page.goto('https://act.audubon.org/a/donate?ms=digital-fund-web-website_nas-topmenu_donate_20200800&aud_path=/field-guide/bird/magnificent-frigatebird&aud_cta=nav');
+      await page.evaluate(aud_tracker);
+      await page.evaluate('audubonTracker.track()');
     });
 
-    // Wait for the tracking script to execute
-    await page.waitForTimeout(2000);
-
-    // Test the getter functions for cta and clickpath
-    const cta = await page.evaluate(() => {
-      return audubonTracker.getSession('cta');
+    test('Cookies are still available', async () => {
+      const aud_sv = await page.cookies().then(cookies => cookies.find(cookie => cookie.name === 'aud_sv'));
+      const aud_fv = await page.cookies().then(cookies => cookies.find(cookie => cookie.name === 'aud_fv'));
+      expect(aud_sv).toBeTruthy();
+      expect(aud_fv).toBeTruthy();
     });
-    expect(cta).toBe('nav');
 
-    const clickPath = await page.evaluate(() => {
-      return audubonTracker.getSession('clickPath');
+    test('pagePath has not been overwritten', async () => {
+      const pagePath = await page.evaluate('audubonTracker.getSession("pagePath")');
+      expect(pagePath).toBe('/field-guide/bird/magnificent-frigatebird');
     });
-    expect(clickPath).toBe('/field-guide/bird/magnificent-frigatebird');
+
+    test('subdomain has not been overwritten', async () => {
+      const subdomain = await page.evaluate('audubonTracker.getSession("subdomain")');
+      expect(subdomain).toBe('www');
+    });
+
+    test('sessionCount has not been overwritten', async () => {
+      const sessionCount = await page.evaluate('audubonTracker.getSession("sessionCount")');
+      expect(sessionCount).toBe(1);
+    });
+
+    test('urlParams have not been overwritten', async () => {
+      const urlParams = await page.evaluate('audubonTracker.getSession("urlParams")');
+      expect(urlParams).toEqual(expect.objectContaining({
+        ms: 'digital-eng-social-facebook-x-20230600-nas_eng',
+        utm_source: 'facebook',
+        utm_medium: 'social',
+        utm_campaign: '20230600_nas_eng'
+      }));
+    });
+
+    test('firstVisitDate has not been overwritten', async () => {
+      const firstVisitDate = await page.evaluate('audubonTracker.getFirstVisit("firstVisitDate")');
+      expect(firstVisitDate).toBe(todayDate);
+    });
+
+    test('ipAddress has not been overwritten', async () => {
+      const ipAddress = await page.evaluate('audubonTracker.getSession("ipAddress")');
+      expect(ipAddress).toBeTruthy();
+    });
+
+    test('cta and clickpath are correct', async () => {
+      const cta = await page.evaluate('audubonTracker.getSession("cta")');
+      const clickpath = await page.evaluate('audubonTracker.getSession("clickpath")');
+      expect(cta).toBe('nav');
+      expect(clickpath).toBe('/field-guide/bird/magnificent-frigatebird');
+    });
   });
 });
