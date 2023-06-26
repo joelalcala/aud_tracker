@@ -6,13 +6,20 @@ const aud_tracker = fs.readFileSync(path.resolve(__dirname, '../src/aud_tracker.
 const NAS_PAGE = 'https://www.audubon.org/field-guide/bird/magnificent-frigatebird?ms=digital-eng-social-facebook-x-20230600-nas_eng&utm_source=facebook&utm_medium=social&utm_campaign=20230600_nas_eng';
 const EA_PAGE = 'https://act.audubon.org/a/donate?ms=digital-fund-web-website_nas-topmenu_donate_20200800&aud_path=/field-guide/bird/magnificent-frigatebird&aud_cta=nav';
 
+const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Safari/537.36';
+const REFERRER = 'https://www.google.com/';
+
 describe('Audubon Tracker', () => {
   let browser, page;
   const todayDate = `${new Date().getFullYear().toString().substr(-2)}${String(new Date().getMonth() + 1).padStart(2, "0")}${String(new Date().getDate()).padStart(2, "0")}`;
 
   beforeAll(async () => {
-    browser = await puppeteer.launch();
+    browser = await puppeteer.launch({ headless: "new" });
     page = await browser.newPage();
+    await page.setUserAgent(USER_AGENT);
+    await page.setExtraHTTPHeaders({
+      'Referer': REFERRER
+    });
   });
 
   afterAll(() => {
@@ -66,10 +73,22 @@ describe('Audubon Tracker', () => {
       expect(firstVisitDate).toBe(todayDate);
     });
 
-    test('ipAddress is available', async () => {
+    test('ipAddress is present', async () => {
       const ipAddress = await page.evaluate('audubonTracker.getSession("ipAddress")');
       expect(ipAddress).toBeTruthy();
     });
+
+    test('browser is correct', async () => {
+      const browser = await page.evaluate('audubonTracker.getSession("browser")');
+      expect(browser).toBe('Ch');
+    });
+
+    test('referrer is correct', async () => {
+      const referrer = await page.evaluate('audubonTracker.getSession("referrer")');
+      expect(referrer).toBe(REFERRER);
+    });
+
+    // Rest of the tests for NAS page...
   });
 
   describe('EA page', () => {
