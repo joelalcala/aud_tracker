@@ -5,6 +5,7 @@ const aud_tracker = fs.readFileSync(path.resolve(__dirname, '../src/aud_tracker.
 
 const NAS_PAGE = 'https://www.audubon.org/field-guide/bird/magnificent-frigatebird?ms=digital-eng-social-facebook-x-20230600-nas_eng&utm_source=facebook&utm_medium=social&utm_campaign=20230600_nas_eng';
 const EA_PAGE = 'https://act.audubon.org/a/donate?ms=digital-fund-web-website_nas-topmenu_donate_20200800&aud_path=/field-guide/bird/magnificent-frigatebird&aud_cta=nav';
+const MULTI_SESSION_PAGE = 'https://rockies.audubon.org/';
 
 const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Safari/537.36';
 const REFERRER = 'https://www.google.com/';
@@ -152,5 +153,29 @@ describe('Audubon Tracker', () => {
       const cta = await page.evaluate('audubonTracker.getSession("cta")');
       expect(cta).toBe('nav');
     });
+
+    // Rest of the tests for EA page...
+  });
+
+  describe('Checking multi-sessions', () => {
+    beforeAll(async () => {
+      await page.deleteCookie({ name: 'aud_sv' });
+      await page.goto(MULTI_SESSION_PAGE);
+      await page.evaluate(aud_tracker);
+      await page.evaluate('audubonTracker.track()');
+      await page.waitForFunction('audubonTracker.getSession("ipAddress") !== undefined');
+    });
+
+    test('First visit cookie is not overwritten', async () => {
+      const firstVisitDate = await page.evaluate('audubonTracker.getFirstVisit("firstVisitDate")');
+      expect(firstVisitDate).toBe(todayDate);
+    });
+
+    test('Session count increased from 1 to 2', async () => {
+      const sessionCount = await page.evaluate('audubonTracker.getSession("sessionCount")');
+      expect(sessionCount).toBe(2);
+    });
+
+    // Rest of the tests for multi-sessions...
   });
 });
