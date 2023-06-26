@@ -1,19 +1,16 @@
 {
-  "name": "aud_tracker",
+  "name": "Aud Tracking Script",
   "version": "1.0.0",
-  "description": "Just a set of tracking scripts.",
-  "main": "aud_tracker.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest ./test/test.js"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/joelalcala/aud_tracker.git"
+  "devDependencies": {
+    "jest": "^29.5.0",
+    "puppeteer": "^20.7.3"
   },
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/joelalcala/aud_tracker/issues"
-  },
-  "homepage": "https://github.com/joelalcala/aud_tracker#readme"
+  "jest": {
+    "testTimeout": 999999,
+    "verbose": true
+
+  }
 }
