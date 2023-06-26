@@ -215,24 +215,18 @@ const audubonTracker = (function() {
       return params;
     },
 
-    cta: function() {
-      const subdomain = this.subdomain();
-      const urlParams = this.urlParams();
-      if (subdomain === "act" && urlParams.aud_cta) {
-        return urlParams.aud_cta;
-      }
-      return null;
-    },
-
     clickPath: function() {
-      const subdomain = this.subdomain();
-      const urlParams = this.urlParams();
-      if (subdomain === "act" && urlParams.aud_path) {
-        return urlParams.aud_path;
-      }
-      return null;
+      const urlParams = new URLSearchParams(window.location.search);
+      const clickPath = urlParams.get("aud_path") || null;
+      return clickPath;
     },
-
+    
+    cta: function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const cta = urlParams.get("aud_cta") || null;
+      return cta;
+    },    
+    
     ipAddress: async function() {
       if (dataStore.sessionData.ipAddress) {
         return dataStore.sessionData.ipAddress;
@@ -271,26 +265,27 @@ const audubonTracker = (function() {
 
   const track = async function() {
     dataStore.initialize();
-
+  
     const hasSessionCookie = dataStore.getCookieValue(sessionCookieName);
     const hasFirstVisitCookie = dataStore.getCookieValue(firstVisitCookieName);
-
-    if (hasSessionCookie) {
-      const clickPath = dataFetchers.clickPath();
-      const cta = dataFetchers.cta();
-
-      if (clickPath || cta) {
-        const sessionData = {};
-        if (clickPath) {
-          sessionData.clickPath = clickPath;
-        }
-        if (cta) {
-          sessionData.cta = cta;
-        }
-
-        dataStore.setSessionData(sessionData);
+  
+    const clickPath = dataFetchers.clickPath();
+    const cta = dataFetchers.cta();
+  
+    if (clickPath || cta) {
+      const sessionData = {};
+  
+      if (clickPath) {
+        sessionData.clickPath = clickPath;
       }
-    } else {
+      if (cta) {
+        sessionData.cta = cta;
+      }
+  
+      dataStore.setSessionData(sessionData);
+    }
+  
+    if (!hasSessionCookie) {
       const sessionData = {
         sessionCount: dataFetchers.sessionCount(),
         browser: dataFetchers.browser(),
@@ -299,20 +294,22 @@ const audubonTracker = (function() {
         urlParams: dataFetchers.urlParams(),
         referrer: dataFetchers.referrer(),
       };
-
+  
       if (!hasFirstVisitCookie) {
         sessionData.firstVisitDate = dataFetchers.firstVisitDate();
         dataStore.setFirstVisitData(sessionData);
       }
-
+  
       const ipAddress = await dataFetchers.ipAddress();
       if (ipAddress) {
         sessionData.ipAddress = ipAddress;
       }
-
+  
       dataStore.setSessionData(sessionData);
     }
   };
+  
+  
 
   const getSession = function(variableName) {
     dataStore.initialize();
