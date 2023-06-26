@@ -124,11 +124,14 @@ describe('Audubon Tracker', () => {
       expect(ipAddress).toBeTruthy();
     });
 
-    test('cta and clickpath are correct', async () => {
+    test('Click path is correct', async () => {
+      const clickPath = await page.evaluate('audubonTracker.getSession("clickPath")');
+      expect(clickPath).toBe('/field-guide/bird/magnificent-frigatebird');
+    });
+
+    test('CTA is correct', async () => {
       const cta = await page.evaluate('audubonTracker.getSession("cta")');
-      const clickpath = await page.evaluate('audubonTracker.getSession("clickpath")');
       expect(cta).toBe('nav');
-      expect(clickpath).toBe('/field-guide/bird/magnificent-frigatebird');
     });
   });
 });
