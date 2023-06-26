@@ -190,7 +190,7 @@ const audubonTracker = (function() {
     },
 
     sessionCount: function() {
-      const sessionData = dataStore.getSessionData;
+      const sessionData = dataStore.sessionData;
       if (sessionData.sessionCount) {
         return sessionData.sessionCount;
       }
@@ -242,7 +242,6 @@ const audubonTracker = (function() {
         const response = await fetch(ipifyUrl);
         const data = await response.json();
         const ipAddress = data.ip;
-        dataStore.setSessionData({ ipAddress });
         return ipAddress;
       } catch (error) {
         console.error("Error fetching IP address:", error);
@@ -271,8 +270,8 @@ const audubonTracker = (function() {
   };
 
   const track = async function() {
-    const hasSessionData = Object.keys(dataStore.getSessionData).length > 0;
-    const hasFirstVisitData = Object.keys(dataStore.getFirstVisitData()).length > 0;
+    const hasSessionData = Object.keys(dataStore.sessionData).length > 0;
+    const hasFirstVisitData = Object.keys(dataStore.firstVisitData).length > 0;
 
     if (!hasSessionData) {
       const sessionData = {
@@ -281,7 +280,6 @@ const audubonTracker = (function() {
         pagePath: dataFetchers.pagePath(),
         subdomain: dataFetchers.subdomain(),
         urlParams: dataFetchers.urlParams(),
-        ipAddress: await dataFetchers.ipAddress(),
         referrer: dataFetchers.referrer(),
         firstVisitDate: dataFetchers.firstVisitDate(),
       };
@@ -311,11 +309,11 @@ const audubonTracker = (function() {
     const sessionData = dataStore.sessionData;
     return sessionData[variableName] || null;
   };
-  
+
   const getFirstVisit = function(variableName) {
     const firstVisitData = dataStore.firstVisitData;
     return firstVisitData[variableName] || null;
-  };  
+  };
 
   return {
     getSession,
