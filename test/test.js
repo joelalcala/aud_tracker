@@ -3,6 +3,9 @@ const path = require('path');
 const fs = require('fs');
 const aud_tracker = fs.readFileSync(path.resolve(__dirname, '../src/aud_tracker.js'), 'utf8');
 
+const NAS_PAGE = 'https://www.audubon.org/field-guide/bird/magnificent-frigatebird?ms=digital-eng-social-facebook-x-20230600-nas_eng&utm_source=facebook&utm_medium=social&utm_campaign=20230600_nas_eng';
+const EA_PAGE = 'https://act.audubon.org/a/donate?ms=digital-fund-web-website_nas-topmenu_donate_20200800&aud_path=/field-guide/bird/magnificent-frigatebird&aud_cta=nav';
+
 describe('Audubon Tracker', () => {
   let browser, page;
   const todayDate = `${new Date().getFullYear().toString().substr(-2)}${String(new Date().getMonth() + 1).padStart(2, "0")}${String(new Date().getDate()).padStart(2, "0")}`;
@@ -18,16 +21,19 @@ describe('Audubon Tracker', () => {
 
   describe('NAS page', () => {
     beforeAll(async () => {
-      await page.goto('https://www.audubon.org/field-guide/bird/magnificent-frigatebird?ms=digital-eng-social-facebook-x-20230600-nas_eng&utm_source=facebook&utm_medium=social&utm_campaign=20230600_nas_eng');
+      await page.goto(NAS_PAGE);
       await page.evaluate(aud_tracker);
       await page.evaluate('audubonTracker.track()');
+      await page.waitForFunction('audubonTracker.getSession("ipAddress") !== undefined');
     });
 
-    test('Cookies are created', async () => {
+    test('Cookies are created and have correct scope', async () => {
       const aud_sv = await page.cookies().then(cookies => cookies.find(cookie => cookie.name === 'aud_sv'));
       const aud_fv = await page.cookies().then(cookies => cookies.find(cookie => cookie.name === 'aud_fv'));
       expect(aud_sv).toBeTruthy();
       expect(aud_fv).toBeTruthy();
+      expect(aud_sv.domain).toBe('.audubon.org');
+      expect(aud_fv.domain).toBe('.audubon.org');
     });
 
     test('pagePath is correct', async () => {
@@ -68,16 +74,19 @@ describe('Audubon Tracker', () => {
 
   describe('EA page', () => {
     beforeAll(async () => {
-      await page.goto('https://act.audubon.org/a/donate?ms=digital-fund-web-website_nas-topmenu_donate_20200800&aud_path=/field-guide/bird/magnificent-frigatebird&aud_cta=nav');
+      await page.goto(EA_PAGE);
       await page.evaluate(aud_tracker);
       await page.evaluate('audubonTracker.track()');
+      await page.waitForFunction('audubonTracker.getSession("ipAddress") !== undefined');
     });
 
-    test('Cookies are still available', async () => {
+    test('Cookies are still available and have correct scope', async () => {
       const aud_sv = await page.cookies().then(cookies => cookies.find(cookie => cookie.name === 'aud_sv'));
       const aud_fv = await page.cookies().then(cookies => cookies.find(cookie => cookie.name === 'aud_fv'));
       expect(aud_sv).toBeTruthy();
       expect(aud_fv).toBeTruthy();
+      expect(aud_sv.domain).toBe('.audubon.org');
+      expect(aud_fv.domain).toBe('.audubon.org');
     });
 
     test('pagePath has not been overwritten', async () => {
