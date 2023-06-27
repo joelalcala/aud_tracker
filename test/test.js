@@ -163,7 +163,6 @@ describe('Audubon Tracker', () => {
       await page.goto(MULTI_SESSION_PAGE);
       await page.evaluate(aud_tracker);
       await page.evaluate('audubonTracker.track()');
-      await page.waitForFunction('audubonTracker.getSession("ipAddress") !== undefined');
     });
 
     test('First visit cookie is not overwritten', async () => {

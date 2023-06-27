@@ -2,15 +2,23 @@
   "name": "Aud Tracking Script",
   "version": "1.0.0",
   "scripts": {
-    "test": "jest ./test/test.js"
+    "build": "webpack --mode production",
+    "test": "jest",
+    "watch": "webpack --watch"
   },
   "devDependencies": {
+    "@babel/core": "^7.22.5",
+    "@babel/preset-env": "^7.22.5",
+    "babel-loader": "^9.1.2",
     "jest": "^29.5.0",
-    "puppeteer": "^20.7.3"
+    "puppeteer": "^20.7.3",
+    "terser-webpack-plugin": "^5.3.9",
+    "webpack": "^5.88.0",
+    "webpack-cli": "^5.1.4"
   },
   "jest": {
     "testTimeout": 999999,
-    "verbose": true
-
+    "verbose": true,
+    "testEnvironment": "node"
   }
 }
