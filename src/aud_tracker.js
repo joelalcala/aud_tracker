@@ -284,7 +284,7 @@ const audubonTracker = (function() {
   
       dataStore.setSessionData(sessionData);
     }
-  
+
     if (!hasSessionCookie) {
       const sessionData = {
         sessionCount: dataFetchers.sessionCount(),

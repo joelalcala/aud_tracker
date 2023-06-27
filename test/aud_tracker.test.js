@@ -20,7 +20,7 @@ describe('Audubon Tracker', () => {
     await page.setUserAgent(USER_AGENT);
     await page.setExtraHTTPHeaders({
       'Referer': REFERRER
-    });
+    });``
   });
 
   afterAll(() => {
