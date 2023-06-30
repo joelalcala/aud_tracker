@@ -89,7 +89,11 @@ describe('Audubon Tracker', () => {
       expect(referrer).toBe(REFERRER);
     });
 
-    // Rest of the tests for NAS page...
+    test('uniqueVisitorId is present', async () => {
+      const uniqueVisitorId = await page.evaluate('audubonTracker.getFirstVisit("uniqueVisitorId")');
+      expect(uniqueVisitorId).toBeTruthy();
+    });
+
   });
 
   describe('EA page', () => {
@@ -154,7 +158,11 @@ describe('Audubon Tracker', () => {
       expect(cta).toBe('nav');
     });
 
-    // Rest of the tests for EA page...
+    test('uniqueVisitorId is still available', async () => {
+      const uniqueVisitorId = await page.evaluate('audubonTracker.getFirstVisit("uniqueVisitorId")');
+      expect(uniqueVisitorId).toBeTruthy();
+    });
+
   });
 
   describe('Checking multi-sessions', () => {

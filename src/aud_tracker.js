@@ -14,6 +14,7 @@ const audubonTracker = (function() {
       firstVisitDate: "fvd",
       cta: "cta",
       clickPath: "cp",
+      uniqueVisitorId: "uvid",
     },
     urlParams: {
       utm_source: "src",
@@ -225,7 +226,18 @@ const audubonTracker = (function() {
       const urlParams = new URLSearchParams(window.location.search);
       const cta = urlParams.get("aud_cta") || null;
       return cta;
-    },    
+    },
+
+    uniqueVisitorId: function() {
+      const firstVisitData = dataStore.firstVisitData;
+      if (firstVisitData.uniqueVisitorId) {
+        return firstVisitData.uniqueVisitorId;
+      }
+  
+      // Combine the current time with a random string to form a unique ID
+      const uniqueVisitorId = new Date().getTime().toString(36) + Math.random().toString(36).substr(2, 16);
+      return uniqueVisitorId;
+    },
     
     ipAddress: async function() {
       if (dataStore.sessionData.ipAddress) {
@@ -297,6 +309,7 @@ const audubonTracker = (function() {
   
       if (!hasFirstVisitCookie) {
         sessionData.firstVisitDate = dataFetchers.firstVisitDate();
+        sessionData.uniqueVisitorId = dataFetchers.uniqueVisitorId();
         dataStore.setFirstVisitData(sessionData);
       }
   
