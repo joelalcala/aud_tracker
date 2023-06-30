@@ -4,6 +4,7 @@
   "scripts": {
     "build": "webpack --mode production",
     "test": "jest",
+    "buildtest": "webpack --mode production && jest",
     "watch": "webpack --watch"
   },
   "devDependencies": {
