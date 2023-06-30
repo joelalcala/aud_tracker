@@ -16,6 +16,7 @@ const audubonTracker = (function() {
       clickPath: "cp",
       uniqueVisitorId: "uvid",
       browser: "br",
+      device: "dv",
     },
     urlParams: {
       utm_source: "src",
@@ -274,6 +275,26 @@ const audubonTracker = (function() {
       return null;
     },
 
+    device: function() {
+      const userAgent = navigator.userAgent;
+      let device;
+    
+      if (userAgent.match(/Android/i)) device = "Android";
+      else if (userAgent.match(/webOS/i)) device = "webOS";
+      else if (userAgent.match(/iPhone/i)) device = "iPhone";
+      else if (userAgent.match(/iPad/i)) device = "iPad";
+      else if (userAgent.match(/iPod/i)) device = "iPod";
+      else if (userAgent.match(/BlackBerry/i)) device = "BlackBerry";
+      else if (userAgent.match(/Windows Phone/i)) device = "Windows Phone";
+      else if (userAgent.match(/Macintosh/i)) device = "Mac"; // Checks for Mac desktop
+      else if (userAgent.match(/Windows NT/i)) device = "Windows"; // Checks for Windows desktop
+      else if (userAgent.match(/Linux/i)) device = "Linux"; // Checks for Linux desktop
+      else device = "Unknown Device";
+    
+      return device;
+    },
+       
+
     firstVisitDate: function() {
       if (dataStore.sessionData.firstVisitDate) {
         return dataStore.sessionData.firstVisitDate;
@@ -321,7 +342,9 @@ const audubonTracker = (function() {
         subdomain: dataFetchers.subdomain(),
         urlParams: dataFetchers.urlParams(),
         referrer: dataFetchers.referrer(),
+        device: dataFetchers.device(), // Add device here
       };
+      
   
       if (!hasFirstVisitCookie) {
         sessionData.firstVisitDate = dataFetchers.firstVisitDate();
