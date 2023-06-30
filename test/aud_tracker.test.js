@@ -1,7 +1,7 @@
 const puppeteer = require('puppeteer');
 const path = require('path');
 const fs = require('fs');
-const aud_tracker = fs.readFileSync(path.resolve(__dirname, '../src/aud_tracker.js'), 'utf8');
+const aud_tracker = fs.readFileSync(path.resolve(__dirname, '../dist/aud_tracker.min.js'), 'utf8');
 
 const NAS_PAGE = 'https://www.audubon.org/field-guide/bird/magnificent-frigatebird?ms=digital-eng-social-facebook-x-20230600-nas_eng&utm_source=facebook&utm_medium=social&utm_campaign=20230600_nas_eng';
 const EA_PAGE = 'https://act.audubon.org/a/donate?ms=digital-fund-web-website_nas-topmenu_donate_20200800&aud_path=/field-guide/bird/magnificent-frigatebird&aud_cta=nav';
@@ -183,6 +183,5 @@ describe('Audubon Tracker', () => {
       expect(sessionCount).toBe(2);
     });
 
-    // Rest of the tests for multi-sessions...
   });
 });

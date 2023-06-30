@@ -364,4 +364,5 @@ const audubonTracker = (function() {
   };
 })();
 
+window.audubonTracker = audubonTracker;
 audubonTracker.track();
