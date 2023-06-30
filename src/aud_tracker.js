@@ -15,6 +15,7 @@ const audubonTracker = (function() {
       cta: "cta",
       clickPath: "cp",
       uniqueVisitorId: "uvid",
+      browser: "br",
     },
     urlParams: {
       utm_source: "src",
@@ -144,6 +145,17 @@ const audubonTracker = (function() {
       }
       return value;
     },
+
+    unabbreviate(value, type) {
+      const abbreviationMap = abbreviations[type];
+      for (const key in abbreviationMap) {
+        if (abbreviationMap[key] === value) {
+          return key;
+        }
+      }
+      return value;
+    },
+
   };
 
   const dataFetchers = {
@@ -321,23 +333,22 @@ const audubonTracker = (function() {
       dataStore.setSessionData(sessionData);
     }
   };
-  
-  
 
   const getSession = function(variableName) {
     dataStore.initialize();
     const sessionData = dataStore.sessionData;
     const abbreviatedKey = abbreviations.keys[variableName] || variableName;
-    return sessionData[variableName] || sessionData[abbreviatedKey] || null;
+    const abbreviatedValue = sessionData[variableName] || sessionData[abbreviatedKey] || null;
+    return dataStore.unabbreviate(abbreviatedValue, variableName);
   };
   
   const getFirstVisit = function(variableName) {
     dataStore.initialize();
     const firstVisitData = dataStore.firstVisitData;
     const abbreviatedKey = abbreviations.keys[variableName] || variableName;
-    return firstVisitData[variableName] || firstVisitData[abbreviatedKey] || null;
+    const abbreviatedValue = firstVisitData[variableName] || firstVisitData[abbreviatedKey] || null;
+    return dataStore.unabbreviate(abbreviatedValue, variableName);
   };
-  
 
   return {
     getSession,

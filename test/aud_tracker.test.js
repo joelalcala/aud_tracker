@@ -81,7 +81,7 @@ describe('Audubon Tracker', () => {
 
     test('browser is correct', async () => {
       const browser = await page.evaluate('audubonTracker.getSession("browser")');
-      expect(browser).toBe('Ch');
+      expect(browser).toBe('Chrome');
     });
 
     test('referrer is correct', async () => {
