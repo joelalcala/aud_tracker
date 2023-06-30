@@ -5,15 +5,15 @@ module.exports = {
   output: {
     filename: 'aud_tracker.min.js',
     path: __dirname + '/dist',
-    environment: {
-        arrowFunction: false,
-        bigIntLiteral: false,
-        const: false,
-        destructuring: false,
-        dynamicImport: false,
-        forOf: false,
-        module: false,
-      }
+    // environment: {
+    //     arrowFunction: false,
+    //     bigIntLiteral: false,
+    //     const: false,
+    //     destructuring: false,
+    //     dynamicImport: false,
+    //     forOf: false,
+    //     module: false,
+    //   }
   },
   module: {
     rules: [
