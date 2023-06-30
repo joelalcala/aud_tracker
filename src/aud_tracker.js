@@ -36,9 +36,9 @@ const audubonTracker = (function() {
       IE: "IE",
     },
     sources: {
-      Google: "G",
-      Facebook: "Fb",
-      Twitter: "Tw",
+      google: "G",
+      facebook: "Fb",
+      twitter: "Tw",
       LinkedIn: "Li",
     },
     mediums: {
@@ -322,15 +322,21 @@ const audubonTracker = (function() {
       if (!hasFirstVisitCookie) {
         sessionData.firstVisitDate = dataFetchers.firstVisitDate();
         sessionData.uniqueVisitorId = dataFetchers.uniqueVisitorId();
-        dataStore.setFirstVisitData(sessionData);
+        dataStore.setFirstVisitData(sessionData); // Set the first visit cookie immediately with available data
       }
 
-      dataStore.setSessionData(sessionData); // Set session cookie here with available data
+      dataStore.setSessionData(sessionData); // Set the session cookie immediately with available data
 
       const ipAddress = await dataFetchers.ipAddress(); // Fetch IP address asynchronously
       if (ipAddress) {
         sessionData.ipAddress = ipAddress;
         dataStore.setSessionData(sessionData); // Update the session cookie with IP address
+
+        if (!hasFirstVisitCookie) {
+          // If it's the first visit, also update the first visit cookie with IP address
+          dataStore.firstVisitData.ipAddress = ipAddress;
+          dataStore.setFirstVisitData(dataStore.firstVisitData);
+        }
       }
     }
   };
