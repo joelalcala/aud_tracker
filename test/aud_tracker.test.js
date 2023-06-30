@@ -55,7 +55,7 @@ describe('Audubon Tracker', () => {
     });
 
     test('sessionCount is correct', async () => {
-      const sessionCount = await page.evaluate('audubonTracker.getSession("sessionCount")');
+      const sessionCount = await page.evaluate('audubonTracker.getFirstVisit("sessionCount")');
       expect(sessionCount).toBe(1);
     });
 
@@ -124,7 +124,7 @@ describe('Audubon Tracker', () => {
     });
 
     test('sessionCount has not been overwritten', async () => {
-      const sessionCount = await page.evaluate('audubonTracker.getSession("sessionCount")');
+      const sessionCount = await page.evaluate('audubonTracker.getFirstVisit("sessionCount")');
       expect(sessionCount).toBe(1);
     });
 
@@ -179,7 +179,7 @@ describe('Audubon Tracker', () => {
     });
 
     test('Session count increased from 1 to 2', async () => {
-      const sessionCount = await page.evaluate('audubonTracker.getSession("sessionCount")');
+      const sessionCount = await page.evaluate('audubonTracker.getFirstVisit("sessionCount")');
       expect(sessionCount).toBe(2);
     });
 
