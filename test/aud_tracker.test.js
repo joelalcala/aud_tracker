@@ -172,16 +172,23 @@ describe('Audubon Tracker', () => {
       await page.evaluate(aud_tracker);
       await page.evaluate('audubonTracker.track()');
     });
-
+  
+    //test that the aud_sv cookie doesn't exist
+    test('aud_sv cookie does not exist', async () => {
+      const aud_sv = await page.cookies().then(cookies => cookies.find(cookie => cookie.name === 'aud_sv'));
+      expect(aud_sv).toBeFalsy();
+    });
+    
     test('First visit cookie is not overwritten', async () => {
       const firstVisitDate = await page.evaluate('audubonTracker.getFirstVisit("firstVisitDate")');
       expect(firstVisitDate).toBe(todayDate);
     });
-
+  
     test('Session count increased from 1 to 2', async () => {
       const sessionCount = await page.evaluate('audubonTracker.getFirstVisit("sessionCount")');
       expect(sessionCount).toBe(2);
     });
-
+  
   });
+  
 });

@@ -289,49 +289,56 @@ const audubonTracker = (function() {
 
   const track = async function() {
     dataStore.initialize();
-
+  
     const hasSessionCookie = dataStore.getCookieValue(sessionCookieName);
     const hasFirstVisitCookie = dataStore.getCookieValue(firstVisitCookieName);
-
+  
     const clickPath = dataFetchers.clickPath();
     const cta = dataFetchers.cta();
-
+  
     if (clickPath || cta) {
       const sessionData = {};
-
+  
       if (clickPath) {
         sessionData.clickPath = clickPath;
       }
       if (cta) {
         sessionData.cta = cta;
       }
-
+  
       dataStore.setSessionData(sessionData);
     }
-
+  
     if (!hasSessionCookie) {
+      let sessionCount = 1;
+      if (hasFirstVisitCookie && dataStore.firstVisitData.sc) {
+        sessionCount = dataStore.firstVisitData.sc + 1;
+      }
       const sessionData = {
-        sessionCount: dataFetchers.sessionCount(),
+        sessionCount: sessionCount,
         browser: dataFetchers.browser(),
         pagePath: dataFetchers.pagePath(),
         subdomain: dataFetchers.subdomain(),
         urlParams: dataFetchers.urlParams(),
         referrer: dataFetchers.referrer(),
       };
-
+  
       if (!hasFirstVisitCookie) {
         sessionData.firstVisitDate = dataFetchers.firstVisitDate();
         sessionData.uniqueVisitorId = dataFetchers.uniqueVisitorId();
         dataStore.setFirstVisitData(sessionData); // Set the first visit cookie immediately with available data
+      } else {
+        dataStore.firstVisitData.sc = sessionCount;
+        dataStore.setFirstVisitData(dataStore.firstVisitData);
       }
-
+  
       dataStore.setSessionData(sessionData); // Set the session cookie immediately with available data
-
+  
       const ipAddress = await dataFetchers.ipAddress(); // Fetch IP address asynchronously
       if (ipAddress) {
         sessionData.ipAddress = ipAddress;
         dataStore.setSessionData(sessionData); // Update the session cookie with IP address
-
+  
         if (!hasFirstVisitCookie) {
           // If it's the first visit, also update the first visit cookie with IP address
           dataStore.firstVisitData.ipAddress = ipAddress;
@@ -340,6 +347,7 @@ const audubonTracker = (function() {
       }
     }
   };
+  
 
   const getSession = function(variableName) {
     dataStore.initialize();
