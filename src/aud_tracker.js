@@ -1,13 +1,16 @@
+import config from './config.js';
+
+const abbreviations = config.abbreviations;
+const domain = config.domain;
+const sessionCookieName = config.sessionCookieName;
+const firstVisitCookieName = config.firstVisitCookieName;
+
 const audubonTracker = (function() {
   const ipifyUrl = "https://api.ipify.org?format=json";
-  const sessionCookieName = "aud_sv";
-  const firstVisitCookieName = "aud_fv";
-  const domain = ".audubon.org";
-  const abbreviations = require("./abbreviations");
 
   const urlParamKeys = Object.keys(abbreviations.urlParams);
 
-  const abbreviationsManager = {
+  const abbreviationsUtil = {
     getAbbreviatedData(data) {
       const abbreviatedData = {};
       for (const key in data) {
@@ -105,16 +108,103 @@ const audubonTracker = (function() {
     setSessionData(data) {
       this.initialize();
       this.sessionData = { ...this.sessionData, ...data };
-      const abbreviatedData = abbreviationsManager.getAbbreviatedData(this.sessionData);
+      const abbreviatedData = abbreviationsUtil.getAbbreviatedData(this.sessionData);
       this.setCookieValue(sessionCookieName, abbreviatedData, "", domain);
     },
 
     setFirstVisitData(data) {
       this.initialize();
       this.firstVisitData = { ...this.firstVisitData, ...data };
-      const abbreviatedData = abbreviationsManager.getAbbreviatedData(this.firstVisitData);
+      const abbreviatedData = abbreviationsUtil.getAbbreviatedData(this.firstVisitData);
       this.setCookieValue(firstVisitCookieName, abbreviatedData, "Thu, 31 Dec 9999 23:59:59 GMT", domain);
     },
+
+    getAbbreviatedData(data) {
+      const abbreviatedData = {};
+      for (const key in data) {
+        if (data.hasOwnProperty(key) && data[key] !== null) {
+          const abbreviation = abbreviations.keys[key] || key;
+
+          if (key === "urlParams") {
+            const urlParams = data[key];
+            const unabbreviatedUrlParams = {};
+
+            for (const paramKey in urlParams) {
+              if (abbreviations.urlParams[paramKey]) {
+                unabbreviatedUrlParams[paramKey] = urlParams[paramKey];
+              }
+            }
+
+            abbreviatedData[abbreviation] = unabbreviatedUrlParams;
+          } else {
+            abbreviatedData[abbreviation] = data[key];
+          }
+        }
+      }
+      return abbreviatedData;
+    },
+
+    getAbbreviatedValue(value) {
+      for (const map of Object.values(abbreviations)) {
+        const abbreviation = Object.keys(map).find(key => map[key] === value);
+        if (abbreviation) {
+          return abbreviation;
+        }
+      }
+      return value;
+    },
+
+    unabbreviate(value, type) {
+      const abbreviationMap = abbreviations[type];
+      for (const key in abbreviationMap) {
+        if (abbreviationMap[key] === value) {
+          return key;
+        }
+      }
+      return value;
+    },
+
+    getFirstVisitDate() {
+      if (this.sessionData.firstVisitDate) {
+        return this.sessionData.firstVisitDate;
+      }
+
+      const now = new Date();
+      const firstVisitDate = `${String(now.getFullYear()).slice(-2)}${String(now.getMonth() + 1).padStart(2, "0")}${String(
+        now.getDate()
+      ).padStart(2, "0")}`;
+      return firstVisitDate;
+    },
+
+    getUniqueVisitorId() {
+      const firstVisitData = this.firstVisitData;
+      if (firstVisitData.uniqueVisitorId) {
+        return firstVisitData.uniqueVisitorId;
+      }
+
+      // Combine the current time with a random string to form a unique ID
+      const uniqueVisitorId =
+        new Date().getTime().toString(36) + Math.random().toString(36).substr(2, 16);
+      return uniqueVisitorId;
+    },
+
+    async getIpAddress() {
+      if (this.sessionData.ipAddress) {
+        return this.sessionData.ipAddress;
+      }
+
+      try {
+        const response = await fetch(ipifyUrl);
+        const data = await response.json();
+        const ipAddress = data.ip;
+        return ipAddress;
+      } catch (error) {
+        console.error("Error fetching IP address:", error);
+        return null;
+      }
+    },
+
+    // ...rest of the code
   };
 
   const dataFetchers = {
@@ -205,25 +295,13 @@ const audubonTracker = (function() {
         return firstVisitData.uniqueVisitorId;
       }
 
-      // Combine the current time with a random string to form a unique ID
-      const uniqueVisitorId = new Date().getTime().toString(36) + Math.random().toString(36).substr(2, 16);
+      const uniqueVisitorId = dataStore.getUniqueVisitorId();
       return uniqueVisitorId;
     },
 
     ipAddress: async function() {
-      if (dataStore.sessionData.ipAddress) {
-        return dataStore.sessionData.ipAddress;
-      }
-
-      try {
-        const response = await fetch(ipifyUrl);
-        const data = await response.json();
-        const ipAddress = data.ip;
-        return ipAddress;
-      } catch (error) {
-        console.error("Error fetching IP address:", error);
-        return null;
-      }
+      const ipAddress = await dataStore.getIpAddress();
+      return ipAddress;
     },
 
     referrer: function() {
@@ -252,17 +330,7 @@ const audubonTracker = (function() {
       return device;
     },
 
-    firstVisitDate: function() {
-      if (dataStore.sessionData.firstVisitDate) {
-        return dataStore.sessionData.firstVisitDate;
-      }
-
-      const now = new Date();
-      const firstVisitDate = `${String(now.getFullYear()).slice(-2)}${String(now.getMonth() + 1).padStart(2, "0")}${String(
-        now.getDate()
-      ).padStart(2, "0")}`;
-      return firstVisitDate;
-    },
+    // ...rest of the code
   };
 
   const track = async function() {
@@ -299,32 +367,33 @@ const audubonTracker = (function() {
         subdomain: dataFetchers.subdomain(),
         urlParams: dataFetchers.urlParams(),
         referrer: dataFetchers.referrer(),
-        device: dataFetchers.device(), // Add device here
+        device: dataFetchers.device(),
       };
 
       if (!hasFirstVisitCookie) {
-        sessionData.firstVisitDate = dataFetchers.firstVisitDate();
+        sessionData.firstVisitDate = dataStore.getFirstVisitDate();
         sessionData.uniqueVisitorId = dataFetchers.uniqueVisitorId();
-        dataStore.setFirstVisitData(sessionData); // Set the first visit cookie immediately with available data
+        dataStore.setFirstVisitData(sessionData);
       } else {
         dataStore.firstVisitData.sc = sessionCount;
         dataStore.setFirstVisitData(dataStore.firstVisitData);
       }
 
-      dataStore.setSessionData(sessionData); // Set the session cookie immediately with available data
+      dataStore.setSessionData(sessionData);
 
-      const ipAddress = await dataFetchers.ipAddress(); // Fetch IP address asynchronously
+      const ipAddress = await dataFetchers.ipAddress();
       if (ipAddress) {
         sessionData.ipAddress = ipAddress;
-        dataStore.setSessionData(sessionData); // Update the session cookie with IP address
+        dataStore.setSessionData(sessionData);
 
         if (!hasFirstVisitCookie) {
-          // If it's the first visit, also update the first visit cookie with IP address
           dataStore.firstVisitData.ipAddress = ipAddress;
           dataStore.setFirstVisitData(dataStore.firstVisitData);
         }
       }
     }
+
+    // ...rest of the code
   };
 
   const getSession = function(variableName) {
@@ -332,7 +401,7 @@ const audubonTracker = (function() {
     const sessionData = dataStore.sessionData;
     const abbreviatedKey = abbreviations.keys[variableName] || variableName;
     const abbreviatedValue = sessionData[variableName] || sessionData[abbreviatedKey] || null;
-    return abbreviationsManager.unabbreviate(abbreviatedValue, variableName);
+    return abbreviationsUtil.unabbreviate(abbreviatedValue, variableName);
   };
 
   const getFirstVisit = function(variableName) {
@@ -340,7 +409,7 @@ const audubonTracker = (function() {
     const firstVisitData = dataStore.firstVisitData;
     const abbreviatedKey = abbreviations.keys[variableName] || variableName;
     const abbreviatedValue = firstVisitData[variableName] || firstVisitData[abbreviatedKey] || null;
-    return abbreviationsManager.unabbreviate(abbreviatedValue, variableName);
+    return abbreviationsUtil.unabbreviate(abbreviatedValue, variableName);
   };
 
   return {
