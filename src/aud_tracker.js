@@ -3,52 +3,56 @@ const audubonTracker = (function() {
   const sessionCookieName = "aud_sv";
   const firstVisitCookieName = "aud_fv";
   const domain = ".audubon.org";
-
-  const abbreviations = {
-    keys: {
-      pagePath: "pp",
-      subdomain: "sd",
-      sessionCount: "sc",
-      ipAddress: "ip",
-      referrer: "ref",
-      firstVisitDate: "fvd",
-      cta: "cta",
-      clickPath: "cp",
-      uniqueVisitorId: "uvid",
-      browser: "br",
-      device: "dv",
-    },
-    urlParams: {
-      utm_source: "src",
-      utm_medium: "med",
-      utm_campaign: "cmp",
-      utm_content: "cnt",
-      utm_term: "trm",
-      ms: "ms",
-      aud_cta: "cta",
-      aud_path: "path",
-    },
-    browser: {
-      Chrome: "Ch",
-      Firefox: "FF",
-      Safari: "SF",
-      Edge: "Ed",
-      Opera: "Op",
-      IE: "IE",
-    },
-    sources: {
-      google: "G",
-      facebook: "Fb",
-      twitter: "Tw",
-      LinkedIn: "Li",
-    },
-    mediums: {
-      email: "em",
-      social: "so",
-    },
-  };
+  const abbreviations = require("./abbreviations");
 
   const urlParamKeys = Object.keys(abbreviations.urlParams);
+
+  const abbreviationsManager = {
+    getAbbreviatedData(data) {
+      const abbreviatedData = {};
+      for (const key in data) {
+        if (data.hasOwnProperty(key) && data[key] !== null) {
+          const abbreviation = abbreviations.keys[key] || key;
+
+          if (key === "urlParams") {
+            const urlParams = data[key];
+            const unabbreviatedUrlParams = {};
+
+            for (const paramKey in urlParams) {
+              if (abbreviations.urlParams[paramKey]) {
+                unabbreviatedUrlParams[paramKey] = urlParams[paramKey];
+              }
+            }
+
+            abbreviatedData[abbreviation] = unabbreviatedUrlParams;
+          } else {
+            abbreviatedData[abbreviation] = data[key];
+          }
+        }
+      }
+      return abbreviatedData;
+    },
+
+    getAbbreviatedValue(value) {
+      for (const map of Object.values(abbreviations)) {
+        const abbreviation = Object.keys(map).find(key => map[key] === value);
+        if (abbreviation) {
+          return abbreviation;
+        }
+      }
+      return value;
+    },
+
+    unabbreviate(value, type) {
+      const abbreviationMap = abbreviations[type];
+      for (const key in abbreviationMap) {
+        if (abbreviationMap[key] === value) {
+          return key;
+        }
+      }
+      return value;
+    },
+  };
 
   const dataStore = {
     initialized: false,
@@ -101,62 +105,16 @@ const audubonTracker = (function() {
     setSessionData(data) {
       this.initialize();
       this.sessionData = { ...this.sessionData, ...data };
-      const abbreviatedData = this.getAbbreviatedData(this.sessionData);
+      const abbreviatedData = abbreviationsManager.getAbbreviatedData(this.sessionData);
       this.setCookieValue(sessionCookieName, abbreviatedData, "", domain);
     },
 
     setFirstVisitData(data) {
       this.initialize();
       this.firstVisitData = { ...this.firstVisitData, ...data };
-      const abbreviatedData = this.getAbbreviatedData(this.firstVisitData);
+      const abbreviatedData = abbreviationsManager.getAbbreviatedData(this.firstVisitData);
       this.setCookieValue(firstVisitCookieName, abbreviatedData, "Thu, 31 Dec 9999 23:59:59 GMT", domain);
     },
-
-    getAbbreviatedData(data) {
-      const abbreviatedData = {};
-      for (const key in data) {
-        if (data.hasOwnProperty(key) && data[key] !== null) {
-          const abbreviation = abbreviations.keys[key] || key;
-    
-          if (key === "urlParams") {
-            const urlParams = data[key];
-            const unabbreviatedUrlParams = {};
-    
-            for (const paramKey in urlParams) {
-              if (abbreviations.urlParams[paramKey]) {
-                unabbreviatedUrlParams[paramKey] = urlParams[paramKey];
-              }
-            }
-    
-            abbreviatedData[abbreviation] = unabbreviatedUrlParams;
-          } else {
-            abbreviatedData[abbreviation] = data[key];
-          }
-        }
-      }
-      return abbreviatedData;
-    },
-
-    getAbbreviatedValue(value) {
-      for (const map of Object.values(abbreviations)) {
-        const abbreviation = Object.keys(map).find(key => map[key] === value);
-        if (abbreviation) {
-          return abbreviation;
-        }
-      }
-      return value;
-    },
-
-    unabbreviate(value, type) {
-      const abbreviationMap = abbreviations[type];
-      for (const key in abbreviationMap) {
-        if (abbreviationMap[key] === value) {
-          return key;
-        }
-      }
-      return value;
-    },
-
   };
 
   const dataFetchers = {
@@ -234,7 +192,7 @@ const audubonTracker = (function() {
       const clickPath = urlParams.get("aud_path") || null;
       return clickPath;
     },
-    
+
     cta: function() {
       const urlParams = new URLSearchParams(window.location.search);
       const cta = urlParams.get("aud_cta") || null;
@@ -246,12 +204,12 @@ const audubonTracker = (function() {
       if (firstVisitData.uniqueVisitorId) {
         return firstVisitData.uniqueVisitorId;
       }
-  
+
       // Combine the current time with a random string to form a unique ID
       const uniqueVisitorId = new Date().getTime().toString(36) + Math.random().toString(36).substr(2, 16);
       return uniqueVisitorId;
     },
-    
+
     ipAddress: async function() {
       if (dataStore.sessionData.ipAddress) {
         return dataStore.sessionData.ipAddress;
@@ -278,7 +236,7 @@ const audubonTracker = (function() {
     device: function() {
       const userAgent = navigator.userAgent;
       let device;
-    
+
       if (userAgent.match(/Android/i)) device = "Android";
       else if (userAgent.match(/webOS/i)) device = "webOS";
       else if (userAgent.match(/iPhone/i)) device = "iPhone";
@@ -290,10 +248,9 @@ const audubonTracker = (function() {
       else if (userAgent.match(/Windows NT/i)) device = "Windows"; // Checks for Windows desktop
       else if (userAgent.match(/Linux/i)) device = "Linux"; // Checks for Linux desktop
       else device = "Unknown Device";
-    
+
       return device;
     },
-       
 
     firstVisitDate: function() {
       if (dataStore.sessionData.firstVisitDate) {
@@ -310,26 +267,26 @@ const audubonTracker = (function() {
 
   const track = async function() {
     dataStore.initialize();
-  
+
     const hasSessionCookie = dataStore.getCookieValue(sessionCookieName);
     const hasFirstVisitCookie = dataStore.getCookieValue(firstVisitCookieName);
-  
+
     const clickPath = dataFetchers.clickPath();
     const cta = dataFetchers.cta();
-  
+
     if (clickPath || cta) {
       const sessionData = {};
-  
+
       if (clickPath) {
         sessionData.clickPath = clickPath;
       }
       if (cta) {
         sessionData.cta = cta;
       }
-  
+
       dataStore.setSessionData(sessionData);
     }
-  
+
     if (!hasSessionCookie) {
       let sessionCount = 1;
       if (hasFirstVisitCookie && dataStore.firstVisitData.sc) {
@@ -344,8 +301,7 @@ const audubonTracker = (function() {
         referrer: dataFetchers.referrer(),
         device: dataFetchers.device(), // Add device here
       };
-      
-  
+
       if (!hasFirstVisitCookie) {
         sessionData.firstVisitDate = dataFetchers.firstVisitDate();
         sessionData.uniqueVisitorId = dataFetchers.uniqueVisitorId();
@@ -354,14 +310,14 @@ const audubonTracker = (function() {
         dataStore.firstVisitData.sc = sessionCount;
         dataStore.setFirstVisitData(dataStore.firstVisitData);
       }
-  
+
       dataStore.setSessionData(sessionData); // Set the session cookie immediately with available data
-  
+
       const ipAddress = await dataFetchers.ipAddress(); // Fetch IP address asynchronously
       if (ipAddress) {
         sessionData.ipAddress = ipAddress;
         dataStore.setSessionData(sessionData); // Update the session cookie with IP address
-  
+
         if (!hasFirstVisitCookie) {
           // If it's the first visit, also update the first visit cookie with IP address
           dataStore.firstVisitData.ipAddress = ipAddress;
@@ -370,22 +326,21 @@ const audubonTracker = (function() {
       }
     }
   };
-  
 
   const getSession = function(variableName) {
     dataStore.initialize();
     const sessionData = dataStore.sessionData;
     const abbreviatedKey = abbreviations.keys[variableName] || variableName;
     const abbreviatedValue = sessionData[variableName] || sessionData[abbreviatedKey] || null;
-    return dataStore.unabbreviate(abbreviatedValue, variableName);
+    return abbreviationsManager.unabbreviate(abbreviatedValue, variableName);
   };
-  
+
   const getFirstVisit = function(variableName) {
     dataStore.initialize();
     const firstVisitData = dataStore.firstVisitData;
     const abbreviatedKey = abbreviations.keys[variableName] || variableName;
     const abbreviatedValue = firstVisitData[variableName] || firstVisitData[abbreviatedKey] || null;
-    return dataStore.unabbreviate(abbreviatedValue, variableName);
+    return abbreviationsManager.unabbreviate(abbreviatedValue, variableName);
   };
 
   return {
