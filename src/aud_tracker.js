@@ -1,20 +1,14 @@
 import config from './config.js';
-
-const abbreviations = config.abbreviations;
-const domain = config.domain;
-const sessionCookieName = config.sessionCookieName;
-const firstVisitCookieName = config.firstVisitCookieName;
+const { abbreviations, domain, sessionCookieName, firstVisitCookieName } = config;
+const ipifyUrl = "https://api.ipify.org?format=json";
 
 const audubonTracker = (function () {
-  const ipifyUrl = "https://api.ipify.org?format=json";
-
   const urlParamKeys = Object.keys(abbreviations.urlParams);
-
   const abbreviationsUtil = {
     getAbbreviatedData(data) {
       const abbreviatedData = {};
       for (const key in data) {
-        if (data.hasOwnProperty(key) && data[key] !== null) {
+        if (Object.prototype.hasOwnProperty.call(data, key) && data[key] !== null) {
           const abbreviation = abbreviations.keys[key] || key;
 
           if (key === "urlParams") {
@@ -121,7 +115,7 @@ const audubonTracker = (function () {
   };
 
   const dataFetchers = {
-    browser: function () {
+    browser: () => {
       if (dataStore.sessionData.browser) {
         return dataStore.sessionData.browser;
       }
@@ -146,7 +140,7 @@ const audubonTracker = (function () {
       return null;
     },
 
-    pagePath: function () {
+    pagePath: () => {
       if (dataStore.sessionData.pagePath) {
         return dataStore.sessionData.pagePath;
       }
@@ -155,7 +149,7 @@ const audubonTracker = (function () {
       return pagePath;
     },
 
-    subdomain: function () {
+    subdomain: () => {
       if (dataStore.sessionData.subdomain) {
         return dataStore.sessionData.subdomain;
       }
@@ -164,7 +158,7 @@ const audubonTracker = (function () {
       return subdomain;
     },
 
-    sessionCount: function () {
+    sessionCount: () => {
       const sessionData = dataStore.sessionData;
       if (sessionData.sessionCount) {
         return sessionData.sessionCount;
@@ -174,7 +168,7 @@ const audubonTracker = (function () {
       return sessionCount;
     },
 
-    urlParams: function () {
+    urlParams: () => {
       if (dataStore.sessionData.urlParams) {
         return dataStore.sessionData.urlParams;
       }
@@ -190,19 +184,19 @@ const audubonTracker = (function () {
       return params;
     },
 
-    clickPath: function () {
+    clickPath: () => {
       const urlParams = new URLSearchParams(window.location.search);
       const clickPath = urlParams.get("aud_path") || null;
       return clickPath;
     },
 
-    cta: function () {
+    cta: () => {
       const urlParams = new URLSearchParams(window.location.search);
       const cta = urlParams.get("aud_cta") || null;
       return cta;
     },
 
-    uniqueVisitorId: function () {
+    uniqueVisitorId: () => {
       const firstVisitData = dataStore.firstVisitData;
       if (firstVisitData.uniqueVisitorId) {
         return firstVisitData.uniqueVisitorId;
@@ -213,7 +207,7 @@ const audubonTracker = (function () {
       return uniqueVisitorId;
     },
 
-    ipAddress: async function () {
+    ipAddress: async () => {
       if (dataStore.sessionData.ipAddress) {
         return dataStore.sessionData.ipAddress;
       }
@@ -229,14 +223,14 @@ const audubonTracker = (function () {
       }
     },
 
-    referrer: function () {
+    referrer: () => {
       if (document.referrer) {
         return document.referrer;
       }
       return null;
     },
 
-    device: function () {
+    device: () => {
       const userAgent = navigator.userAgent;
       let device;
 
@@ -255,7 +249,7 @@ const audubonTracker = (function () {
       return device;
     },
 
-    firstVisitDate: function() {
+    firstVisitDate: () => {
       if (dataStore.sessionData.firstVisitDate) {
         return dataStore.sessionData.firstVisitDate;
       }
@@ -268,7 +262,7 @@ const audubonTracker = (function () {
     },
   };
 
-  const track = async function () {
+  const track = async () => {
     dataStore.initialize();
 
     const hasSessionCookie = dataStore.getCookieValue(sessionCookieName);
@@ -301,7 +295,7 @@ const audubonTracker = (function () {
         pagePath: dataFetchers.pagePath(),
         subdomain: dataFetchers.subdomain(),
         urlParams: dataFetchers.urlParams(),
-        referrer: document.referrer || null,
+        referrer: dataFetchers.referrer(),
         device: dataFetchers.device(),
         firstVisitDate: dataFetchers.firstVisitDate(),
         uniqueVisitorId: dataFetchers.uniqueVisitorId(),
@@ -319,7 +313,7 @@ const audubonTracker = (function () {
     }
   };
 
-  const getSession = function (variableName) {
+  const getSession = variableName => {
     dataStore.initialize();
     const sessionData = dataStore.sessionData;
     const abbreviatedKey = abbreviations.keys[variableName] || variableName;
@@ -327,7 +321,7 @@ const audubonTracker = (function () {
     return abbreviationsUtil.unabbreviate(abbreviatedValue, variableName);
   };
 
-  const getFirstVisit = function (variableName) {
+  const getFirstVisit = variableName => {
     dataStore.initialize();
     const firstVisitData = dataStore.firstVisitData;
     const abbreviatedKey = abbreviations.keys[variableName] || variableName;
