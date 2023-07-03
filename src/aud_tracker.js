@@ -118,8 +118,6 @@ const audubonTracker = (function () {
       const abbreviatedData = abbreviationsUtil.getAbbreviatedData(this.firstVisitData);
       this.setCookieValue(firstVisitCookieName, abbreviatedData, "Thu, 31 Dec 9999 23:59:59 GMT", domain);
     },
-
-    // ...rest of the code
   };
 
   const dataFetchers = {
@@ -210,7 +208,6 @@ const audubonTracker = (function () {
         return firstVisitData.uniqueVisitorId;
       }
 
-      // Combine the current time with a random string to form a unique ID
       const uniqueVisitorId =
         new Date().getTime().toString(36) + Math.random().toString(36).substr(2, 16);
       return uniqueVisitorId;
@@ -269,8 +266,6 @@ const audubonTracker = (function () {
       ).padStart(2, "0")}`;
       return firstVisitDate;
     },
-
-    // ...rest of the code
   };
 
   const track = async function () {
@@ -322,8 +317,6 @@ const audubonTracker = (function () {
         dataStore.setFirstVisitData(dataStore.firstVisitData);
       }
     }
-
-    // ...rest of the code
   };
 
   const getSession = function (variableName) {
