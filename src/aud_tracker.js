@@ -5,7 +5,7 @@ const domain = config.domain;
 const sessionCookieName = config.sessionCookieName;
 const firstVisitCookieName = config.firstVisitCookieName;
 
-const audubonTracker = (function() {
+const audubonTracker = (function () {
   const ipifyUrl = "https://api.ipify.org?format=json";
 
   const urlParamKeys = Object.keys(abbreviations.urlParams);
@@ -119,96 +119,11 @@ const audubonTracker = (function() {
       this.setCookieValue(firstVisitCookieName, abbreviatedData, "Thu, 31 Dec 9999 23:59:59 GMT", domain);
     },
 
-    getAbbreviatedData(data) {
-      const abbreviatedData = {};
-      for (const key in data) {
-        if (data.hasOwnProperty(key) && data[key] !== null) {
-          const abbreviation = abbreviations.keys[key] || key;
-
-          if (key === "urlParams") {
-            const urlParams = data[key];
-            const unabbreviatedUrlParams = {};
-
-            for (const paramKey in urlParams) {
-              if (abbreviations.urlParams[paramKey]) {
-                unabbreviatedUrlParams[paramKey] = urlParams[paramKey];
-              }
-            }
-
-            abbreviatedData[abbreviation] = unabbreviatedUrlParams;
-          } else {
-            abbreviatedData[abbreviation] = data[key];
-          }
-        }
-      }
-      return abbreviatedData;
-    },
-
-    getAbbreviatedValue(value) {
-      for (const map of Object.values(abbreviations)) {
-        const abbreviation = Object.keys(map).find(key => map[key] === value);
-        if (abbreviation) {
-          return abbreviation;
-        }
-      }
-      return value;
-    },
-
-    unabbreviate(value, type) {
-      const abbreviationMap = abbreviations[type];
-      for (const key in abbreviationMap) {
-        if (abbreviationMap[key] === value) {
-          return key;
-        }
-      }
-      return value;
-    },
-
-    getFirstVisitDate() {
-      if (this.sessionData.firstVisitDate) {
-        return this.sessionData.firstVisitDate;
-      }
-
-      const now = new Date();
-      const firstVisitDate = `${String(now.getFullYear()).slice(-2)}${String(now.getMonth() + 1).padStart(2, "0")}${String(
-        now.getDate()
-      ).padStart(2, "0")}`;
-      return firstVisitDate;
-    },
-
-    getUniqueVisitorId() {
-      const firstVisitData = this.firstVisitData;
-      if (firstVisitData.uniqueVisitorId) {
-        return firstVisitData.uniqueVisitorId;
-      }
-
-      // Combine the current time with a random string to form a unique ID
-      const uniqueVisitorId =
-        new Date().getTime().toString(36) + Math.random().toString(36).substr(2, 16);
-      return uniqueVisitorId;
-    },
-
-    async getIpAddress() {
-      if (this.sessionData.ipAddress) {
-        return this.sessionData.ipAddress;
-      }
-
-      try {
-        const response = await fetch(ipifyUrl);
-        const data = await response.json();
-        const ipAddress = data.ip;
-        return ipAddress;
-      } catch (error) {
-        console.error("Error fetching IP address:", error);
-        return null;
-      }
-    },
-
     // ...rest of the code
   };
 
   const dataFetchers = {
-    browser: function() {
+    browser: function () {
       if (dataStore.sessionData.browser) {
         return dataStore.sessionData.browser;
       }
@@ -233,7 +148,7 @@ const audubonTracker = (function() {
       return null;
     },
 
-    pagePath: function() {
+    pagePath: function () {
       if (dataStore.sessionData.pagePath) {
         return dataStore.sessionData.pagePath;
       }
@@ -242,7 +157,7 @@ const audubonTracker = (function() {
       return pagePath;
     },
 
-    subdomain: function() {
+    subdomain: function () {
       if (dataStore.sessionData.subdomain) {
         return dataStore.sessionData.subdomain;
       }
@@ -251,7 +166,7 @@ const audubonTracker = (function() {
       return subdomain;
     },
 
-    sessionCount: function() {
+    sessionCount: function () {
       const sessionData = dataStore.sessionData;
       if (sessionData.sessionCount) {
         return sessionData.sessionCount;
@@ -261,7 +176,7 @@ const audubonTracker = (function() {
       return sessionCount;
     },
 
-    urlParams: function() {
+    urlParams: function () {
       if (dataStore.sessionData.urlParams) {
         return dataStore.sessionData.urlParams;
       }
@@ -277,41 +192,54 @@ const audubonTracker = (function() {
       return params;
     },
 
-    clickPath: function() {
+    clickPath: function () {
       const urlParams = new URLSearchParams(window.location.search);
       const clickPath = urlParams.get("aud_path") || null;
       return clickPath;
     },
 
-    cta: function() {
+    cta: function () {
       const urlParams = new URLSearchParams(window.location.search);
       const cta = urlParams.get("aud_cta") || null;
       return cta;
     },
 
-    uniqueVisitorId: function() {
+    uniqueVisitorId: function () {
       const firstVisitData = dataStore.firstVisitData;
       if (firstVisitData.uniqueVisitorId) {
         return firstVisitData.uniqueVisitorId;
       }
 
-      const uniqueVisitorId = dataStore.getUniqueVisitorId();
+      // Combine the current time with a random string to form a unique ID
+      const uniqueVisitorId =
+        new Date().getTime().toString(36) + Math.random().toString(36).substr(2, 16);
       return uniqueVisitorId;
     },
 
-    ipAddress: async function() {
-      const ipAddress = await dataStore.getIpAddress();
-      return ipAddress;
+    ipAddress: async function () {
+      if (dataStore.sessionData.ipAddress) {
+        return dataStore.sessionData.ipAddress;
+      }
+
+      try {
+        const response = await fetch(ipifyUrl);
+        const data = await response.json();
+        const ipAddress = data.ip;
+        return ipAddress;
+      } catch (error) {
+        console.error("Error fetching IP address:", error);
+        return null;
+      }
     },
 
-    referrer: function() {
+    referrer: function () {
       if (document.referrer) {
         return document.referrer;
       }
       return null;
     },
 
-    device: function() {
+    device: function () {
       const userAgent = navigator.userAgent;
       let device;
 
@@ -330,10 +258,22 @@ const audubonTracker = (function() {
       return device;
     },
 
+    firstVisitDate: function() {
+      if (dataStore.sessionData.firstVisitDate) {
+        return dataStore.sessionData.firstVisitDate;
+      }
+
+      const now = new Date();
+      const firstVisitDate = `${String(now.getFullYear()).slice(-2)}${String(now.getMonth() + 1).padStart(2, "0")}${String(
+        now.getDate()
+      ).padStart(2, "0")}`;
+      return firstVisitDate;
+    },
+
     // ...rest of the code
   };
 
-  const track = async function() {
+  const track = async function () {
     dataStore.initialize();
 
     const hasSessionCookie = dataStore.getCookieValue(sessionCookieName);
@@ -366,37 +306,27 @@ const audubonTracker = (function() {
         pagePath: dataFetchers.pagePath(),
         subdomain: dataFetchers.subdomain(),
         urlParams: dataFetchers.urlParams(),
-        referrer: dataFetchers.referrer(),
+        referrer: document.referrer || null,
         device: dataFetchers.device(),
+        firstVisitDate: dataFetchers.firstVisitDate(),
+        uniqueVisitorId: dataFetchers.uniqueVisitorId(),
       };
 
-      if (!hasFirstVisitCookie) {
-        sessionData.firstVisitDate = dataStore.getFirstVisitDate();
-        sessionData.uniqueVisitorId = dataFetchers.uniqueVisitorId();
-        dataStore.setFirstVisitData(sessionData);
-      } else {
-        dataStore.firstVisitData.sc = sessionCount;
-        dataStore.setFirstVisitData(dataStore.firstVisitData);
-      }
-
-      dataStore.setSessionData(sessionData);
+      dataStore.setFirstVisitData(sessionData);
 
       const ipAddress = await dataFetchers.ipAddress();
       if (ipAddress) {
         sessionData.ipAddress = ipAddress;
         dataStore.setSessionData(sessionData);
-
-        if (!hasFirstVisitCookie) {
-          dataStore.firstVisitData.ipAddress = ipAddress;
-          dataStore.setFirstVisitData(dataStore.firstVisitData);
-        }
+        dataStore.firstVisitData.ipAddress = ipAddress;
+        dataStore.setFirstVisitData(dataStore.firstVisitData);
       }
     }
 
     // ...rest of the code
   };
 
-  const getSession = function(variableName) {
+  const getSession = function (variableName) {
     dataStore.initialize();
     const sessionData = dataStore.sessionData;
     const abbreviatedKey = abbreviations.keys[variableName] || variableName;
@@ -404,7 +334,7 @@ const audubonTracker = (function() {
     return abbreviationsUtil.unabbreviate(abbreviatedValue, variableName);
   };
 
-  const getFirstVisit = function(variableName) {
+  const getFirstVisit = function (variableName) {
     dataStore.initialize();
     const firstVisitData = dataStore.firstVisitData;
     const abbreviatedKey = abbreviations.keys[variableName] || variableName;
