@@ -14,6 +14,7 @@ const config = {
         uniqueVisitorId: "uvid",
         browser: "br",
         device: "dv",
+        urlParams: "up",
       },
       urlParams: {
         utm_source: "src",

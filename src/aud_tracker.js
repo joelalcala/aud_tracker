@@ -10,18 +10,19 @@ const audubonTracker = (function () {
       for (const key in data) {
         if (Object.prototype.hasOwnProperty.call(data, key) && data[key] !== null) {
           const abbreviation = abbreviations.keys[key] || key;
-
+  
           if (key === "urlParams") {
             const urlParams = data[key];
-            const unabbreviatedUrlParams = {};
-
+            const abbreviatedUrlParams = {};
+  
             for (const paramKey in urlParams) {
               if (abbreviations.urlParams[paramKey]) {
-                unabbreviatedUrlParams[paramKey] = urlParams[paramKey];
+                const abbreviatedKey = abbreviations.urlParams[paramKey];
+                abbreviatedUrlParams[abbreviatedKey] = urlParams[paramKey];
               }
             }
-
-            abbreviatedData[abbreviation] = unabbreviatedUrlParams;
+  
+            abbreviatedData[abbreviation] = abbreviatedUrlParams;
           } else {
             abbreviatedData[abbreviation] = data[key];
           }
