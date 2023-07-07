@@ -4,16 +4,7 @@ module.exports = {
   entry: './src/index.js',
   output: {
     filename: 'aud_tracker.min.js',
-    path: __dirname + '/dist',
-    // environment: {
-    //     arrowFunction: false,
-    //     bigIntLiteral: false,
-    //     const: false,
-    //     destructuring: false,
-    //     dynamicImport: false,
-    //     forOf: false,
-    //     module: false,
-    //   }
+    path: __dirname + '/dist'
   },
   module: {
     rules: [

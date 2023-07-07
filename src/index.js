@@ -2,16 +2,16 @@ import config from './config.js';
 import abbreviationsUtil from './utils/abbreviations.js';
 import dataStore from './store.js';
 import dataFetchers from './fetchers.js';
-const { abbreviations, sessionCookieName, firstVisitCookieName} = config;
+const { abbreviations } = config;
 
 const audubonTracker = (function () {
 
   const track = async () => {
     dataStore.initialize();
 
-    const hasSessionCookie = dataStore.getCookieValue(sessionCookieName);
-    const hasFirstVisitCookie = dataStore.getCookieValue(firstVisitCookieName);
-
+    const hasSessionCookie = dataStore.hasSessionCookie();
+    const hasFirstVisitCookie = dataStore.hasFirstVisitCookie();
+    
     const clickPath = dataFetchers.clickPath();
     const cta = dataFetchers.cta();
 

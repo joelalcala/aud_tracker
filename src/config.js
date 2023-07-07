@@ -1,5 +1,3 @@
-// config.js
-
 const config = {
     abbreviations: {
       keys: {
