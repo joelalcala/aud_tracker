@@ -1,7 +1,11 @@
-const dataStore = require()
+import config from "./config";
+import dataStore from "./store";
+const { abbreviations } = config;
+const urlParamKeys = Object.keys(abbreviations.urlParams);
+const ipifyUrl = "https://api.ipify.org?format=json";
 
 const dataFetchers = {
-    browser: function() {
+    browser: () => {
       if (dataStore.sessionData.browser) {
         return dataStore.sessionData.browser;
       }
@@ -26,7 +30,7 @@ const dataFetchers = {
       return null;
     },
 
-    pagePath: function() {
+    pagePath: () => {
       if (dataStore.sessionData.pagePath) {
         return dataStore.sessionData.pagePath;
       }
@@ -35,7 +39,7 @@ const dataFetchers = {
       return pagePath;
     },
 
-    subdomain: function() {
+    subdomain: () => {
       if (dataStore.sessionData.subdomain) {
         return dataStore.sessionData.subdomain;
       }
@@ -44,7 +48,7 @@ const dataFetchers = {
       return subdomain;
     },
 
-    sessionCount: function() {
+    sessionCount: () => {
       const sessionData = dataStore.sessionData;
       if (sessionData.sessionCount) {
         return sessionData.sessionCount;
@@ -54,7 +58,7 @@ const dataFetchers = {
       return sessionCount;
     },
 
-    urlParams: function() {
+    urlParams: () => {
       if (dataStore.sessionData.urlParams) {
         return dataStore.sessionData.urlParams;
       }
@@ -70,30 +74,30 @@ const dataFetchers = {
       return params;
     },
 
-    clickPath: function() {
+    clickPath: () => {
       const urlParams = new URLSearchParams(window.location.search);
       const clickPath = urlParams.get("aud_path") || null;
       return clickPath;
     },
-    
-    cta: function() {
+
+    cta: () => {
       const urlParams = new URLSearchParams(window.location.search);
       const cta = urlParams.get("aud_cta") || null;
       return cta;
     },
 
-    uniqueVisitorId: function() {
+    uniqueVisitorId: () => {
       const firstVisitData = dataStore.firstVisitData;
       if (firstVisitData.uniqueVisitorId) {
         return firstVisitData.uniqueVisitorId;
       }
-  
-      // Combine the current time with a random string to form a unique ID
-      const uniqueVisitorId = new Date().getTime().toString(36) + Math.random().toString(36).substr(2, 16);
+
+      const uniqueVisitorId =
+        new Date().getTime().toString(36) + Math.random().toString(36).substr(2, 16);
       return uniqueVisitorId;
     },
-    
-    ipAddress: async function() {
+
+    ipAddress: async () => {
       if (dataStore.sessionData.ipAddress) {
         return dataStore.sessionData.ipAddress;
       }
@@ -109,17 +113,17 @@ const dataFetchers = {
       }
     },
 
-    referrer: function() {
+    referrer: () => {
       if (document.referrer) {
         return document.referrer;
       }
       return null;
     },
 
-    device: function() {
+    device: () => {
       const userAgent = navigator.userAgent;
       let device;
-    
+
       if (userAgent.match(/Android/i)) device = "Android";
       else if (userAgent.match(/webOS/i)) device = "webOS";
       else if (userAgent.match(/iPhone/i)) device = "iPhone";
@@ -131,12 +135,11 @@ const dataFetchers = {
       else if (userAgent.match(/Windows NT/i)) device = "Windows"; // Checks for Windows desktop
       else if (userAgent.match(/Linux/i)) device = "Linux"; // Checks for Linux desktop
       else device = "Unknown Device";
-    
+
       return device;
     },
-       
 
-    firstVisitDate: function() {
+    firstVisitDate: () => {
       if (dataStore.sessionData.firstVisitDate) {
         return dataStore.sessionData.firstVisitDate;
       }
@@ -148,5 +151,5 @@ const dataFetchers = {
       return firstVisitDate;
     },
   };
-  
-  module.exports = dataFetchers;
+
+  export default dataFetchers;

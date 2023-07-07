@@ -1,7 +1,7 @@
 const TerserPlugin = require('terser-webpack-plugin');
 
 module.exports = {
-  entry: './src/aud_tracker.js',
+  entry: './src/index.js',
   output: {
     filename: 'aud_tracker.min.js',
     path: __dirname + '/dist',
