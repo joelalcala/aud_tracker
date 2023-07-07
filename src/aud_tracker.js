@@ -1,5 +1,5 @@
 import config from './config.js';
-const { abbreviations, domain, sessionCookieName, firstVisitCookieName } = config;
+const { abbreviations, domain, sessionCookieName, firstVisitCookieName, sessionExpiration } = config;
 const ipifyUrl = "https://api.ipify.org?format=json";
 
 const audubonTracker = (function () {
@@ -104,8 +104,13 @@ const audubonTracker = (function () {
       this.initialize();
       this.sessionData = { ...this.sessionData, ...data };
       const abbreviatedData = abbreviationsUtil.getAbbreviatedData(this.sessionData);
-      this.setCookieValue(sessionCookieName, abbreviatedData, "", domain);
+    
+      // Calculate the expiration date based on the sessionExpiration config value
+      const expiration = new Date(Date.now() + (config.sessionExpiration * 60 * 1000));
+    
+      this.setCookieValue(sessionCookieName, abbreviatedData, expiration.toUTCString(), domain);
     },
+    
 
     setFirstVisitData(data) {
       this.initialize();

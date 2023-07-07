@@ -48,6 +48,7 @@ const config = {
     domain: ".audubon.org",
     sessionCookieName: "aud_sv",
     firstVisitCookieName: "aud_fv",
+    sessionExpiration: 30, // in minutes
   };
   
   export default config;
