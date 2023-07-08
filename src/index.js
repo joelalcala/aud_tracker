@@ -3,8 +3,6 @@ import abbreviationsUtil from './utils/abbreviations.js';
 import dataStore from './store.js';
 import dataFetchers from './fetchers.js';
 const { abbreviations } = config;
-const hasSessionCookie = dataStore.hasSessionCookie();
-const hasFirstVisitCookie = dataStore.hasFirstVisitCookie();
 
 const audubonTracker = (function () {
 
@@ -24,29 +22,22 @@ const audubonTracker = (function () {
       urlParams: dataFetchers.urlParams(),
       referrer: dataFetchers.referrer(),
       device: dataFetchers.device(),
-      uniqueVisitorId: dataFetchers.uniqueVisitorId(),
     }
     return perSessionData;
   }
 
   function getPerFirstVisitData() {
     const perFirstVisitData = {
-      firstVisitDate: dataFetchers.firstVisitDate()
+      firstVisitDate: dataFetchers.firstVisitDate(),
+      uniqueVisitorId: dataFetchers.uniqueVisitorId(),
     }
     return perFirstVisitData;
   }
 
-  function getSessionCount() {
-    let sessionCount = 1;
-    if (hasFirstVisitCookie && dataStore.firstVisitData.sc) {
-      sessionCount = dataStore.firstVisitData.sc + 1;
-    }
-    return sessionCount;
-  }
 
   const track = async () => {
     dataStore.initialize();
-
+    const { hasFirstVisitCookie, hasSessionCookie } = dataStore;
     let perSessionData = {}
     let perFirstVisitData = {}
 
@@ -59,7 +50,7 @@ const audubonTracker = (function () {
 
 
     if (!hasSessionCookie) {
-      const sessionCount = getSessionCount();
+      const sessionCount = dataFetchers.sessionCount();
       perSessionData.sessionCount = sessionCount;
       perSessionData = {...getPerSessionData(), ...perSessionData};
       dataStore.setSessionData(perSessionData);

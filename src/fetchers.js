@@ -49,12 +49,10 @@ const dataFetchers = {
     },
 
     sessionCount: () => {
-      const sessionData = dataStore.sessionData;
-      if (sessionData.sessionCount) {
-        return sessionData.sessionCount;
+      let sessionCount = 1;
+      if (dataStore.hasFirstVisitCookie && dataStore.firstVisitData.sc) {
+        sessionCount = dataStore.firstVisitData.sc + 1;
       }
-
-      const sessionCount = (sessionData.sessionCount || 0) + 1;
       return sessionCount;
     },
 

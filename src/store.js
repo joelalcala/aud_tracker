@@ -9,6 +9,8 @@ const dataStore = {
     cookies: null,
     sessionData: {},
     firstVisitData: {},
+    hasFirstVisitCookie: null,
+    hasSessionCookie: null,
 
     initialize() {
         if (this.initialized) {
@@ -16,6 +18,8 @@ const dataStore = {
         }
 
         this.cookies = cookieUtils.getCookies();
+        this.hasFirstVisitCookie = this.cookies[firstVisitCookieName] ? true : false;
+        this.hasSessionCookie = this.cookies[sessionCookieName] ? true : false;
         this.sessionData = this.cookies[sessionCookieName] || {};
         this.firstVisitData = this.cookies[firstVisitCookieName] || {};
         this.initialized = true;
@@ -31,7 +35,7 @@ const dataStore = {
         const abbreviatedData = abbreviationsUtil.getAbbreviatedData(this.sessionData);
 
         // Calculate the expiration date based on the sessionExpiration config value
-        const expiration = new Date(Date.now() + (config.sessionExpiration * 60 * 1000));
+        const expiration = new Date(Date.now() + (sessionExpiration * 60 * 1000));
 
         cookieUtils.setCookieValue(sessionCookieName, abbreviatedData, expiration.toUTCString(), domain);
     },
@@ -42,17 +46,6 @@ const dataStore = {
         const abbreviatedData = abbreviationsUtil.getAbbreviatedData(this.firstVisitData);
         cookieUtils.setCookieValue(firstVisitCookieName, abbreviatedData, "Thu, 31 Dec 9999 23:59:59 GMT", domain);
     },
-
-    hasSessionCookie() {
-        this.initialize();
-        return this.getCookieValue(sessionCookieName);
-    },
-
-    hasFirstVisitCookie() {
-        this.initialize();
-        return this.getCookieValue(firstVisitCookieName);
-    }
-
 
 };
 
