@@ -14,6 +14,7 @@ const config = {
         device: "dv",
         urlParams: "up",
         pageCount: "pc",
+        landingPage: "lp",
       },
       urlParams: {
         utm_source: "src",
