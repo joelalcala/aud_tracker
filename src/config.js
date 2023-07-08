@@ -13,6 +13,7 @@ const config = {
         browser: "br",
         device: "dv",
         urlParams: "up",
+        pageCount: "pc",
       },
       urlParams: {
         utm_source: "src",

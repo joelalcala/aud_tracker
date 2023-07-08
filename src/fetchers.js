@@ -56,6 +56,12 @@ const dataFetchers = {
       return sessionCount;
     },
 
+    pageCount: () => {
+      let pageCount = dataStore.firstVisitData.pc || 0;
+      pageCount += 1;
+      return pageCount;
+    },
+
     urlParams: () => {
       if (dataStore.sessionData.urlParams) {
         return dataStore.sessionData.urlParams;

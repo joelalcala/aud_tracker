@@ -6,10 +6,17 @@ const { abbreviations } = config;
 
 const audubonTracker = (function () {
 
+  function getLastSeenData() {
+    const lastSeenData = {
+      clickPath: dataFetchers.clickPath(),
+      cta: dataFetchers.cta(),
+    };
+    return lastSeenData;
+  }
+
   function getPerPageData() {
     const perPageData = {
-      clickPath: dataFetchers.clickPath(),
-      cta: dataFetchers.cta()
+      pageCount: dataFetchers.pageCount(),
     };
     return perPageData;
   }
@@ -42,12 +49,13 @@ const audubonTracker = (function () {
     let perFirstVisitData = {}
 
     // Set data collected on each page
-    let perPageData = getPerPageData();
-    const { clickPath, cta } = perPageData;
+    const { clickPath, cta } = getLastSeenData();
     if (clickPath || cta) {
-      dataStore.setSessionData(perPageData);
+      dataStore.setSessionData({ ...dataStore.sessionData, clickPath, cta });
     }
-
+    
+    const perPageData = getPerPageData();
+    dataStore.setFirstVisitData({ ...dataStore.firstVisitData , ...perPageData});
 
     if (!hasSessionCookie) {
       const sessionCount = dataFetchers.sessionCount();
