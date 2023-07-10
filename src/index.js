@@ -1,10 +1,17 @@
-import config from './config.js';
-import abbreviationsUtil from './utils/abbreviations.js';
 import dataStore from './store.js';
 import dataFetchers from './fetchers.js';
-const { abbreviations } = config;
 
 const audubonTracker = (function () {
+
+  console.log("dataStore: ", dataStore);
+
+  const getSession = (variableName) => {
+    return dataStore.getSessionValue(variableName);
+  };
+
+  const getFirstVisit = (variableName) => {
+    return dataStore.getFirstVisitValue(variableName);
+  };
 
   function getLastSeenData() {
     const lastSeenData = {
@@ -27,9 +34,9 @@ const audubonTracker = (function () {
       browser: dataFetchers.browser(),
       landingPage: dataFetchers.pagePath(),
       subdomain: dataFetchers.subdomain(),
-      urlParams: dataFetchers.urlParams(),
       referrer: dataFetchers.referrer(),
       device: dataFetchers.device(),
+      ...dataFetchers.urlParams(),
     }
     return perSessionData;
   }
@@ -52,13 +59,13 @@ const audubonTracker = (function () {
       updatedProfileData.uniqueVisitorId = firstVisitData.uvid;
     }
   
-    if (sessionData.up.med === "social") {
-      updatedProfileData.social = true;
-    }
+    // if (sessionData.up.med === "social") {
+    //   updatedProfileData.social = true;
+    // }
   
-    if (sessionData.up.med === "email") {
-      updatedProfileData.email = true;
-    }
+    // if (sessionData.up.med === "email") {
+    //   updatedProfileData.email = true;
+    // }
   
     if (pageViewData.pagePath && pageViewData.pagePath.startsWith("/field-guide/bird/")) {
       updatedProfileData.birdsVisited = updatedProfileData.birdsVisited || [];
@@ -125,22 +132,6 @@ const audubonTracker = (function () {
     let profileData = processProfileData();
     dataStore.setProfileData(profileData);
 
-  };
-
-  const getSession = variableName => {
-    dataStore.initialize();
-    const sessionData = dataStore.sessionData;
-    const abbreviatedKey = abbreviations.keys[variableName] || variableName;
-    const abbreviatedValue = sessionData[variableName] || sessionData[abbreviatedKey] || null;
-    return abbreviationsUtil.unabbreviate(abbreviatedValue, variableName);
-  };
-
-  const getFirstVisit = variableName => {
-    dataStore.initialize();
-    const firstVisitData = dataStore.firstVisitData;
-    const abbreviatedKey = abbreviations.keys[variableName] || variableName;
-    const abbreviatedValue = firstVisitData[variableName] || firstVisitData[abbreviatedKey] || null;
-    return abbreviationsUtil.unabbreviate(abbreviatedValue, variableName);
   };
 
   return {

@@ -1,52 +1,52 @@
-import config from "../config.js";
-const { abbreviations } = config;
+import config from '../config';
 
-const abbreviationsUtil = {
-    getAbbreviatedData(data) {
-      const abbreviatedData = {};
-      for (const key in data) {
-        if (Object.prototype.hasOwnProperty.call(data, key) && data[key] !== null) {
-          const abbreviation = abbreviations.keys[key] || key;
-  
-          if (key === "urlParams") {
-            const urlParams = data[key];
-            const abbreviatedUrlParams = {};
-  
-            for (const paramKey in urlParams) {
-              if (abbreviations.urlParams[paramKey]) {
-                const abbreviatedKey = abbreviations.urlParams[paramKey];
-                abbreviatedUrlParams[abbreviatedKey] = urlParams[paramKey];
-              }
-            }
-  
-            abbreviatedData[abbreviation] = abbreviatedUrlParams;
-          } else {
-            abbreviatedData[abbreviation] = data[key];
-          }
+const { keys, values } = config.abbreviations;
+
+const abbreviationsUtils = {
+  abbreviateObject(obj) {
+    return processObject(obj, keys, values, true);
+  },
+
+  unabbreviateObject(obj) {
+    return processObject(obj, keys, values, false);
+  }
+};
+
+function processObject(obj, keysAbbreviations, valuesAbbreviations, abbreviate) {
+  const result = {};
+
+  for (const key in obj) {
+    let abbreviatedKey = key;
+    let abbreviatedValue = obj[key];
+
+    if (abbreviate) {
+      if (keysAbbreviations.hasOwnProperty(key)) {
+        abbreviatedKey = keysAbbreviations[key];
+      }
+
+      if (valuesAbbreviations.hasOwnProperty(obj[key])) {
+        abbreviatedValue = valuesAbbreviations[obj[key]];
+      }
+    } else {
+      for (const abbrevKey in keysAbbreviations) {
+        if (keysAbbreviations[abbrevKey] === key) {
+          abbreviatedKey = abbrevKey;
+          break;
         }
       }
-      return abbreviatedData;
-    },
 
-    getAbbreviatedValue(value) {
-      for (const map of Object.values(abbreviations)) {
-        const abbreviation = Object.keys(map).find(key => map[key] === value);
-        if (abbreviation) {
-          return abbreviation;
+      for (const abbrevValue in valuesAbbreviations) {
+        if (valuesAbbreviations[abbrevValue] === obj[key]) {
+          abbreviatedValue = abbrevValue;
+          break;
         }
       }
-      return value;
-    },
+    }
 
-    unabbreviate(value, type) {
-      const abbreviationMap = abbreviations[type];
-      for (const key in abbreviationMap) {
-        if (abbreviationMap[key] === value) {
-          return key;
-        }
-      }
-      return value;
-    },
-  };
+    result[abbreviatedKey] = abbreviatedValue;
+  }
 
-  export default abbreviationsUtil;
+  return result;
+}
+
+export default abbreviationsUtils;
