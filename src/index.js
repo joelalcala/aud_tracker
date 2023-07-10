@@ -55,6 +55,18 @@ const audubonTracker = (function () {
     if (firstVisitData.uniqueVisitorId) {
       updatedProfileData.uniqueVisitorId = firstVisitData.uniqueVisitorId;
     }
+
+    if (firstVisitData.firstVisitDate) {
+      updatedProfileData.firstVisitDate = firstVisitData.firstVisitDate;
+    }
+
+    if(firstVisitData.pageCount) {
+      updatedProfileData.pageCount = firstVisitData.pageCount;
+    }
+
+    if (firstVisitData.sessionCount) {
+      updatedProfileData.sessionCount = firstVisitData.sessionCount;
+    }
   
     if (sessionData.utm_medium === "social") {
       updatedProfileData.social = true;

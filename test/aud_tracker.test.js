@@ -20,10 +20,10 @@ describe('Audubon Tracker', () => {
     await page.setUserAgent(USER_AGENT);
     await page.setExtraHTTPHeaders({
       'Referer': REFERRER
-    });``
+    });
   });
 
-  afterAll(() => {
+  afterAll(async () => {
     browser.close();
   });
 
@@ -31,8 +31,7 @@ describe('Audubon Tracker', () => {
     beforeAll(async () => {
       await page.goto(NAS_PAGE);
       await page.evaluate(aud_tracker);
-      await page.evaluate('audubonTracker.track()');
-      await page.waitForFunction('audubonTracker.getSession("ipAddress") !== undefined');
+      await page.waitForFunction('audubonTracker.getSession("ipAddress") !== null');
     });
 
     test('Cookies are created and have correct scope', async () => {
@@ -110,8 +109,16 @@ describe('Audubon Tracker', () => {
     beforeAll(async () => {
       await page.goto(EA_PAGE);
       await page.evaluate(aud_tracker);
-      await page.evaluate('audubonTracker.track()');
       await page.waitForFunction('audubonTracker.getSession("ipAddress") !== undefined');
+    });
+
+    afterAll(async () => {
+      let cookies = await page.cookies();
+      for (let cookie of cookies) {
+        if(cookie.name == 'aud_sv') {
+          await page.deleteCookie(cookie);
+        }
+      }
     });
 
     test('Cookies are still available and have correct scope', async () => {
@@ -187,16 +194,8 @@ describe('Audubon Tracker', () => {
 
   describe('Checking multi-sessions', () => {
     beforeAll(async () => {
-      await page.deleteCookie({ name: 'aud_sv' });
       await page.goto(MULTI_SESSION_PAGE);
       await page.evaluate(aud_tracker);
-      await page.evaluate('audubonTracker.track()');
-    });
-  
-    //test that the aud_sv cookie doesn't exist
-    test('aud_sv cookie does not exist', async () => {
-      const aud_sv = await page.cookies().then(cookies => cookies.find(cookie => cookie.name === 'aud_sv'));
-      expect(aud_sv).toBeFalsy();
     });
     
     test('First visit cookie is not overwritten', async () => {
