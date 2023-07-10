@@ -19,6 +19,16 @@ module.exports = {
   },
   optimization: {
     minimize: true,
-    minimizer: [new TerserPlugin()]
+    minimizer: [new TerserPlugin(
+      {
+        terserOptions: {
+          mangle: true,
+          compress: {
+            drop_console: true
+          }
+        }
+      }
+      
+    )]
   }
 };

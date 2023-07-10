@@ -44,10 +44,10 @@ describe('Audubon Tracker', () => {
       expect(aud_fv.domain).toBe('.audubon.org');
     });
 
-    test('pagePath is correct', async () => {
-      const pagePath = await page.evaluate('audubonTracker.getSession("pagePath")');
-      expect(pagePath).toBe('/field-guide/bird/magnificent-frigatebird');
-    });
+    test('landingPage is correct', async () => {
+      const landingPage = await page.evaluate('audubonTracker.getSession("landingPage")');
+      expect(landingPage).toBe('/field-guide/bird/magnificent-frigatebird');
+    });    
 
     test('subdomain is correct', async () => {
       const subdomain = await page.evaluate('audubonTracker.getSession("subdomain")');
@@ -59,14 +59,24 @@ describe('Audubon Tracker', () => {
       expect(sessionCount).toBe(1);
     });
 
-    test('urlParams are correct', async () => {
-      const urlParams = await page.evaluate('audubonTracker.getSession("urlParams")');
-      expect(urlParams).toEqual(expect.objectContaining({
-        ms: 'digital-eng-social-facebook-x-20230600-nas_eng',
-        utm_source: 'facebook',
-        utm_medium: 'social',
-        utm_campaign: '20230600_nas_eng'
-      }));
+    test('utm_source is correct', async () => {
+      const utmSource = await page.evaluate('audubonTracker.getSession("utm_source")');
+      expect(utmSource).toBe('facebook');
+    });
+    
+    test('utm_medium is correct', async () => {
+      const utmMedium = await page.evaluate('audubonTracker.getSession("utm_medium")');
+      expect(utmMedium).toBe('social');
+    });
+    
+    test('utm_campaign is correct', async () => {
+      const utmCampaign = await page.evaluate('audubonTracker.getSession("utm_campaign")');
+      expect(utmCampaign).toBe('20230600_nas_eng');
+    });
+
+    test('ms is correct', async () => {
+      const ms = await page.evaluate('audubonTracker.getSession("ms")');
+      expect(ms).toBe('digital-eng-social-facebook-x-20230600-nas_eng');
     });
 
     test('firstVisitDate is correct', async () => {
@@ -113,9 +123,9 @@ describe('Audubon Tracker', () => {
       expect(aud_fv.domain).toBe('.audubon.org');
     });
 
-    test('pagePath has not been overwritten', async () => {
-      const pagePath = await page.evaluate('audubonTracker.getSession("pagePath")');
-      expect(pagePath).toBe('/field-guide/bird/magnificent-frigatebird');
+    test('landingPage has not been overwritten', async () => {
+      const landingPage = await page.evaluate('audubonTracker.getSession("landingPage")');
+      expect(landingPage).toBe('/field-guide/bird/magnificent-frigatebird');
     });
 
     test('subdomain has not been overwritten', async () => {
@@ -128,14 +138,24 @@ describe('Audubon Tracker', () => {
       expect(sessionCount).toBe(1);
     });
 
-    test('urlParams have not been overwritten', async () => {
-      const urlParams = await page.evaluate('audubonTracker.getSession("urlParams")');
-      expect(urlParams).toEqual(expect.objectContaining({
-        ms: 'digital-eng-social-facebook-x-20230600-nas_eng',
-        utm_source: 'facebook',
-        utm_medium: 'social',
-        utm_campaign: '20230600_nas_eng'
-      }));
+    test('utm_source has not been overwritten', async () => {
+      const utmSource = await page.evaluate('audubonTracker.getSession("utm_source")');
+      expect(utmSource).toBe('facebook');
+    });
+
+    test('utm_medium has not been overwritten', async () => {
+      const utmMedium = await page.evaluate('audubonTracker.getSession("utm_medium")');
+      expect(utmMedium).toBe('social');
+    });
+
+    test('utm_campaign has not been overwritten', async () => {
+      const utmCampaign = await page.evaluate('audubonTracker.getSession("utm_campaign")');
+      expect(utmCampaign).toBe('20230600_nas_eng');
+    });
+
+    test('ms has not been overwritten', async () => {
+      const ms = await page.evaluate('audubonTracker.getSession("ms")');
+      expect(ms).toBe('digital-eng-social-facebook-x-20230600-nas_eng');
     });
 
     test('firstVisitDate has not been overwritten', async () => {

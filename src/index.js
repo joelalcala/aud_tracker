@@ -3,8 +3,6 @@ import dataFetchers from './fetchers.js';
 
 const audubonTracker = (function () {
 
-  console.log("dataStore: ", dataStore);
-
   const getSession = (variableName) => {
     return dataStore.getSessionValue(variableName);
   };
@@ -50,22 +48,21 @@ const audubonTracker = (function () {
   }
 
   function processProfileData() {
-    console.log("processing data");
   
     const { sessionData, firstVisitData, pageViewData, profileData } = dataStore;
     let updatedProfileData = profileData;
   
-    if (firstVisitData.uvid) {
-      updatedProfileData.uniqueVisitorId = firstVisitData.uvid;
+    if (firstVisitData.uniqueVisitorId) {
+      updatedProfileData.uniqueVisitorId = firstVisitData.uniqueVisitorId;
     }
   
-    // if (sessionData.up.med === "social") {
-    //   updatedProfileData.social = true;
-    // }
+    if (sessionData.utm_medium === "social") {
+      updatedProfileData.social = true;
+    }
   
-    // if (sessionData.up.med === "email") {
-    //   updatedProfileData.email = true;
-    // }
+    if (sessionData.utm_medium === "email") {
+      updatedProfileData.email = true;
+    }
   
     if (pageViewData.pagePath && pageViewData.pagePath.startsWith("/field-guide/bird/")) {
       updatedProfileData.birdsVisited = updatedProfileData.birdsVisited || [];
@@ -75,8 +72,7 @@ const audubonTracker = (function () {
         updatedProfileData.birdsVisited.push(slug);
       }
     }
-  
-    console.log("profileData", updatedProfileData);
+
     return updatedProfileData;
   }  
 
@@ -126,8 +122,6 @@ const audubonTracker = (function () {
         }
       }
     }
-
-    console.log("about to process data");
 
     let profileData = processProfileData();
     dataStore.setProfileData(profileData);
